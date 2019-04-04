@@ -1,4 +1,5 @@
 node_modules/
 secrets.json
 .idea/*
-data/*
+data/Stormfront
+data/yt

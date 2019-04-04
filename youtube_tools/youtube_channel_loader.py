@@ -1,5 +1,3 @@
-# Slightly adapted from: https://stackoverflow.com/questions/15512239/python-get-all-youtube-video-urls-of-a-channel
-
 from ytcc.download import Download
 import multiprocessing as mp
 import pandas as pd
@@ -8,12 +6,13 @@ import subprocess
 import json
 import os
 
+
 def videos_in_channel(channel_id):
     all_videos = []
 
     playlist_id = 'UU' + channel_id[2:]
 
-    with youtube_dl.YoutubeDL({"ignoreerrors": True, "playlistend": 1000}) as ydl:
+    with youtube_dl.YoutubeDL({"ignoreerrors": True, "playlistend": 2500}) as ydl:
         playd = ydl.extract_info(playlist_id, download=False)
         videos = [{"channel_id": channel_id, "description": vid["description"], "view_count": vid["view_count"],
                    "like_count": vid["like_count"], "dislike_count": vid["dislike_count"],
@@ -25,44 +24,46 @@ def videos_in_channel(channel_id):
     return all_videos
 
 
-def video_captions(video_id, download):
+
+def video_captions(video_id, download, f):
     try:
         captions = download.get_captions(video_id)
     except Exception:
         captions = None
+        f.write("Could not load captions for {0}".format(video_id))
     return captions
 
 
-def video_comments(video_id):
+def video_comments(video_id, f):
     try:
         p = subprocess.check_output('node ./youtube_tools/get_comments.js {0}'.format(video_id), shell=True)
         comment = json.loads(p)
     except Exception:
-        print("Could not load comment for video", video_id)
         comment = None
-    # print(comment)
+        f.write("Could not load comments for {0}".format(video_id))
+
     return comment
 
 
 def channel(dg):
-    print(dg["channel_id"])
-    if os.path.isfile("./data/subs/{0}.csv".format( dg["channel_id"])):
-        print(dg["name"],  "already exists!")
-        return
-    download = Download()
-    channel_id, name, category, channels_dst = dg["channel_id"], dg["name"], dg["category"], dg["channel_dst"]
-    df_list = []
 
-    for video in videos_in_channel(channel_id):
-        video["captions"] = video_captions(video["video_id"], download)
-        video["comments"] = video_comments(video["video_id"])
-        video["name"] = name
-        # video["category"] = category
-        video["channel_id"] = channel_id
-        df_list.append(video)
+    with open("./data/logs/yt_{0}.txt".format(mp.current_process().pid), "a") as f:
+        if os.path.isfile("./data/subs/{0}.csv".format(dg["channel_id"])):
+            print(dg["name"], "already exists!")
+            return
+        download = Download()
+        channel_id, name, category, channels_dst = dg["channel_id"], dg["name"], dg["category"], dg["channel_dst"]
+        df_list = []
 
-    df = pd.DataFrame(df_list)
-    df.to_csv(channels_dst + channel_id + ".csv", index=False)
+        for video in videos_in_channel(channel_id):
+            video["captions"] = video_captions(video["video_id"], download, f)
+            video["comments"] = video_comments(video["video_id"], f)
+            video["name"] = name
+            video["channel_id"] = channel_id
+            df_list.append(video)
+
+        df = pd.DataFrame(df_list)
+        df.to_csv(channels_dst + channel_id + ".csv", index=False)
 
 
 def channels(channels_src, channels_dst):
@@ -70,10 +71,17 @@ def channels(channels_src, channels_dst):
     all_args = []
     for idx, row in df.iterrows():
         args = dict(row)
+        args["idx"] = str(idx)
         args["channel_dst"] = channels_dst
         all_args.append(args)
     pool = mp.Pool(mp.cpu_count())
     pool.map(channel, all_args)
 
 
-channels("./data/manosphere.csv", "./data/subs/")
+if __name__ == "__main__":
+    import sys
+    if len(sys.argv) != 3:
+        print("Wrong number of arguments")
+    else:
+        os.makedirs(sys.argv[2], exist_ok=True)
+        channels(sys.argv[1], sys.argv[2])
