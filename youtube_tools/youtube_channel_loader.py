@@ -12,7 +12,7 @@ def videos_in_channel(channel_id):
 
     playlist_id = 'UU' + channel_id[2:]
 
-    with youtube_dl.YoutubeDL({"ignoreerrors": True, "playlistend": 2500}) as ydl:
+    with youtube_dl.YoutubeDL({"ignoreerrors": True, "playlistend": 3000}) as ydl:
         playd = ydl.extract_info(playlist_id, download=False)
         videos = [{"channel_id": channel_id, "description": vid["description"], "view_count": vid["view_count"],
                    "like_count": vid["like_count"], "dislike_count": vid["dislike_count"],
@@ -48,7 +48,7 @@ def video_comments(video_id, f):
 def channel(dg):
 
     with open("./data/logs/yt_{0}.txt".format(mp.current_process().pid), "a") as f:
-        if os.path.isfile("./data/subs/{0}.csv".format(dg["channel_id"])):
+        if os.path.isfile("./data/yt/{0}.csv".format(dg["channel_id"])):
             print(dg["name"], "already exists!")
             return
         download = Download()
