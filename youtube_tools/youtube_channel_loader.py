@@ -14,7 +14,7 @@ def videos_in_channel(channel_id):
 
     with youtube_dl.YoutubeDL({"ignoreerrors": True, "playlistend": 3000}) as ydl:
         playd = ydl.extract_info(playlist_id, download=False)
-        videos = [{"channel_id": channel_id, "description": vid["description"], "view_count": vid["view_count"],
+        videos = [{"Id": channel_id, "description": vid["description"], "view_count": vid["view_count"],
                    "like_count": vid["like_count"], "dislike_count": vid["dislike_count"],
                    "title": vid["title"], "video_id": vid["id"], "upload_date": vid["upload_date"]} for vid in
                   playd["entries"] if type(vid) is dict]
@@ -22,7 +22,6 @@ def videos_in_channel(channel_id):
         all_videos += videos
 
     return all_videos
-
 
 
 def video_captions(video_id, download, f):
@@ -46,20 +45,22 @@ def video_comments(video_id, f):
 
 
 def channel(dg):
-
     with open("./data/logs/yt_{0}.txt".format(mp.current_process().pid), "a") as f:
-        if os.path.isfile("./data/yt/{0}.csv".format(dg["channel_id"])):
-            print(dg["name"], "already exists!")
+        if os.path.isfile("./data/yt/{0}.csv".format(dg["Id"])):
+            print(dg["Name"], "already exists!")
             return
         download = Download()
-        channel_id, name, category, channels_dst = dg["channel_id"], dg["name"], dg["category"], dg["channel_dst"]
+        channel_id, name, category, data_step, channels_dst = dg["Id"], dg["Name"], dg["Sub-Category"], \
+                                                              dg["Data Collection step"], dg["channel_dst"]
         df_list = []
 
         for video in videos_in_channel(channel_id):
             video["captions"] = video_captions(video["video_id"], download, f)
             video["comments"] = video_comments(video["video_id"], f)
             video["name"] = name
-            video["channel_id"] = channel_id
+            video["step"] = data_step
+            video["category"] = category
+            video["id"] = channel_id
             df_list.append(video)
 
         df = pd.DataFrame(df_list)
@@ -80,6 +81,7 @@ def channels(channels_src, channels_dst):
 
 if __name__ == "__main__":
     import sys
+
     if len(sys.argv) != 3:
         print("Wrong number of arguments")
     else:
