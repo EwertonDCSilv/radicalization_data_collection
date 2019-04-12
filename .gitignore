@@ -3,3 +3,4 @@ secrets.json
 .idea/*
 data/Stormfront
 data/yt
+youtube_tools/api_key.json

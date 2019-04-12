@@ -1,3 +1,4 @@
 git+git://github.com/mkly/youtube-closed-captions.git
 pandas>=0.23.4
 youtube-dl>=2019.3.1
+selenium>=
