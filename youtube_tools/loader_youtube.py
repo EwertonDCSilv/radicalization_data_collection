@@ -3,7 +3,6 @@ from multiprocessing import Pool
 import pandas as pd
 import argparse
 
-
 parser = argparse.ArgumentParser(description="""This scripts receives a `.csv` file with channel ids, categories and 
                                                 the data collection step, and a dest folder. It creates one file per
                                                 channel in the destiny folder containing info about the videos for that
@@ -12,7 +11,7 @@ parser = argparse.ArgumentParser(description="""This scripts receives a `.csv` f
 parser.add_argument("--src", dest="src", type=str, default="./data/sources.csv",
                     help="A .csv containing rows `Name`, `Category`, `Data Collection step`, `Id`")
 
-parser.add_argument("--dst", dest="dst", type=str, default="./data/yt/",
+parser.add_argument("--dst", dest="dst", type=str, default="./data/yt2/",
                     help="Where to save the output files.")
 
 parser.add_argument("--nump", dest="nump", type=int, default=1,

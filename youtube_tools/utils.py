@@ -4,7 +4,7 @@ from datetime import datetime
 import pandas as pd
 import subprocess
 import youtube_dl
-import fcntl
+import logging
 import json
 import time
 import re
@@ -14,6 +14,9 @@ import os
 YT_V3_API_URL = "https://www.googleapis.com/youtube/v3/"
 YT_CHANNEL_URL = "https://www.youtube.com/channel/"
 THREE_SECONDS_WAIT = 3
+
+
+
 
 
 def video_captions(video_id, download, f):
@@ -43,7 +46,7 @@ def videos_in_channel(channel_id, dateafter):
 
     t1 = datetime.now()
 
-    args_dl = {"ignoreerrors": True, "dateafter": dateafter.strftime("%Y%m%d"), "quiet": False}
+    args_dl = {"ignoreerrors": True, "dateafter": dateafter.strftime("%Y%m%d"), "quiet": True, "playlistend":1}
 
     with youtube_dl.YoutubeDL(args_dl) as ydl:
         playd = ydl.extract_info(playlist_id, download=False)
@@ -101,21 +104,33 @@ def channel(channel_id, channel_dst, name, data_step, category):
 # video["captions"] = video_captions(video["video_id"], download, f)
 # video["comments"] = video_comments(video["video_id"], f)
 
+def get_html_session(session):
+    if session is None:
+        print("new html session")
+        return HTMLSession()
+    else:
+        return session
+
+
 def get_yt_api_key(path):
     with open(path) as f:
         return json.load(f)["key"]
 
 
-def get_channel_stats_n_desc(channel_id, api_key):
-    session = HTMLSession()
-    v = session.get(YT_V3_API_URL + "channels?part=snippet,statistics&id={0}&key={1}".format(channel_id, api_key))
-    statistics = v.json()["items"][0]["statistics"]
-    description = v.json()["items"][0]["snippet"]["description"]
-    return {"statistics": statistics, "description": description}
+def get_channel_stats_n_desc(channel_id, api_key, session=None):
+    try:
+        session = get_html_session(session)
+        v = session.get(YT_V3_API_URL + "channels?part=snippet,statistics&id={0}&key={1}".format(channel_id, api_key))
+        statistics = v.json()["items"][0]["statistics"]
+        description = v.json()["items"][0]["snippet"]["description"]
+        return {"statistics": statistics, "description": description}
+    except Exception:
+        print("Could not load statistics for {0}".format(channel_id))
+        return {"statistics": None, "description": None}
 
 
-def channel_text_to_id(href, api_key):
-    session = HTMLSession()
+def channel_text_to_id(href, api_key, session=None):
+    session = get_html_session(session)
     tmp = href.split("/")[1:]
     if tmp[0] == "channel":
         other_id = tmp[1]
@@ -125,12 +140,12 @@ def channel_text_to_id(href, api_key):
     return {"channel_id": other_id}
 
 
-def get_recommended_n_stats(channel_id, name, api_key):
+def get_recommended_n_stats(channel_id, name, api_key, session=None):
+    session = get_html_session(session)
     time.sleep(THREE_SECONDS_WAIT)
-    stats_n_desc_out = get_channel_stats_n_desc(channel_id, api_key)
+    stats_n_desc_out = get_channel_stats_n_desc(channel_id, api_key, session)
     dict_out = {"name": name, "channel_id": channel_id, "edges": [], **stats_n_desc_out}
     print(YT_CHANNEL_URL + channel_id)
-    session = HTMLSession()
     v = session.get(YT_CHANNEL_URL + channel_id)
     v.html.render()
     html = v.html.raw_html
@@ -141,14 +156,8 @@ def get_recommended_n_stats(channel_id, name, api_key):
         channels = section.find_all("a", {"class": "ytd-mini-channel-renderer"})
         for channel in channels:
             name = re.sub("\n", "", channel.text)
-            channel_out = channel_text_to_id(channel.attrs["href"], api_key)
+            channel_out = channel_text_to_id(channel.attrs["href"], api_key, session)
             dict_out["edges"].append({"name": name, "type": title, **channel_out})
     return dict_out
 
 
-def write_json_fun(fun, channel_id, name, api_key, dst_csv):
-    dict_out = fun(channel_id, name, api_key)
-    with open(dst_csv, "a") as g:
-        fcntl.flock(g, fcntl.LOCK_EX)
-        g.write(json.dumps(dict_out) + "\n")
-        fcntl.flock(g, fcntl.LOCK_UN)
