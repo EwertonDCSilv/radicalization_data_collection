@@ -1,1 +1,0 @@
-This is a folder with the logs. This README.txt ensures the folder gets committed.
