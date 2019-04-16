@@ -14,7 +14,7 @@ parser.add_argument("--src", dest="src", type=str, default="./data/sources.csv",
 parser.add_argument("--dst", dest="dst", type=str, default="./data/yt2/",
                     help="Where to save the output files.")
 
-parser.add_argument("--nump", dest="nump", type=int, default=1,
+parser.add_argument("--nump", dest="nump", type=int, default=10,
                     help="Number of simultaneous processes.")
 
 args = parser.parse_args()

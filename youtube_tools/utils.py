@@ -46,7 +46,7 @@ def videos_in_channel(channel_id, dateafter):
 
     t1 = datetime.now()
 
-    args_dl = {"ignoreerrors": True, "dateafter": dateafter.strftime("%Y%m%d"), "quiet": True, "playlistend":1}
+    args_dl = {"ignoreerrors": True, "dateafter": dateafter.strftime("%Y%m%d"), "quiet": True}
 
     with youtube_dl.YoutubeDL(args_dl) as ydl:
         playd = ydl.extract_info(playlist_id, download=False)
