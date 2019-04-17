@@ -2,6 +2,7 @@ from youtube_tools.utils import get_recommended_n_stats, get_yt_api_key
 from requests_html import HTMLSession
 from multiprocessing import Pool
 from datetime import datetime
+from functools import partial
 import pandas as pd
 import argparse
 import json
@@ -40,18 +41,31 @@ parser.add_argument("--key", dest="key", default=None, help="ytv3 API key.")
 parser.add_argument("--num_processes", dest="nump", type=int, default=8,
                     help="Number of simultaneous processes.")
 
+parser.add_argument("--debug", dest="debug", action="store_true",
+                    help="Runs w/o multiprocessing for debugging.")
+
 args = parser.parse_args()
 api_key = args.key if args.key is not None else get_yt_api_key(args.key_path)
 df = pd.read_csv(args.src)
-dst = args.dst + "recommended_{0}.jsonl".format(datetime.now().strftime("%Y%m%d%h%s"))
-
+dst = args.dst + "recommended_{0}.jsonl".format(datetime.now().strftime("%Y%m%d%h"))
 
 to_run = []
 for idx, row in df.iterrows():
     args_pd = dict(row)
     name = args_pd["Name"]
     channel_id = args_pd["Id"]
-    to_run.append((get_recommended_n_stats, channel_id, name, api_key, dst))
 
-p = Pool(args.nump, initializer=initialize_worker)
-p.starmap(write_json_fun, to_run)
+    if not args.debug:
+        to_run.append((get_recommended_n_stats, channel_id, name, api_key, dst))
+
+    else:
+        to_run.append(partial(write_json_fun, _fun=get_recommended_n_stats, _channel_id=channel_id,
+                              _name=name, _api_key=api_key, _dst_csv=dst))
+
+if not args.debug:
+    p = Pool(args.nump, initializer=initialize_worker)
+    p.starmap(write_json_fun, to_run)
+else:
+    initialize_worker()
+    for i in to_run:
+        i()
