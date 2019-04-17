@@ -7,10 +7,10 @@ import glob
 
 parser = argparse.ArgumentParser(description="""""")
 
-parser.add_argument("--src", dest="src", type=str, default="./data/yt/",
+parser.add_argument("--src", dest="src", type=str, default="./data/youtube/yt/",
                     help="Source folder created by `loader_youtube.py`")
 
-parser.add_argument("--dst", dest="dst", type=str, default="./data/cm/",
+parser.add_argument("--dst", dest="dst", type=str, default="./data/youtube/cm/",
                     help="Where to save the output files.")
 
 parser.add_argument("--nump", dest="nump", type=int, default=1,

@@ -9,10 +9,10 @@ parser = argparse.ArgumentParser(description="""This scripts receives a `.csv` f
                                                 channel in the destiny folder containing info about the videos for that
                                                 channel.""")
 
-parser.add_argument("--src", dest="src", type=str, default="./data/sources.csv",
+parser.add_argument("--src", dest="src", type=str, default="./data/youtube/sources.csv",
                     help="A .csv containing rows `Name`, `Category`, `Data Collection step`, `Id`")
 
-parser.add_argument("--dst", dest="dst", type=str, default="./data/yt2/",
+parser.add_argument("--dst", dest="dst", type=str, default="./data/youtube/yt/",
                     help="Where to save the output files.")
 
 parser.add_argument("--nump", dest="nump", type=int, default=5,

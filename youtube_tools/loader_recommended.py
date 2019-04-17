@@ -27,13 +27,13 @@ def initialize_worker():
 parser = argparse.ArgumentParser(description="""Makes a graph with recommended channels from YouTube. For each channel,
                                                 we also collect statistics, such as number of subscribers, etc.""")
 
-parser.add_argument("--src", dest="src", type=str, default="./data/sources.csv",
+parser.add_argument("--src", dest="src", type=str, default="./data/youtube/sources.csv",
                     help="A .csv containing channel ids in a row `Id`.")
 
-parser.add_argument("--dst", dest="dst", type=str, default="./data/rc/",
+parser.add_argument("--dst", dest="dst", type=str, default="./data/youtube/rc/",
                     help="Folder to save the .jsonl output.")
 
-parser.add_argument("--key_path", dest="key_path", type=str, default="./youtube_tools/api_key.json",
+parser.add_argument("--key_path", dest="key_path", type=str, default="./data/youtube/api_key.json",
                     help="Destination to .json containing the key to ytv3 API.")
 
 parser.add_argument("--key", dest="key", default=None, help="ytv3 API key.")
