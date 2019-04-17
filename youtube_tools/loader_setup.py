@@ -1,9 +1,12 @@
 import argparse
+import json
 import os
 
 parser = argparse.ArgumentParser(description="""This creates the folder structure for the other YouTube scripts""")
 
 parser.add_argument("--apikey", dest="apikey", type=str, default="Your API key here", help="YouTube v3 API key.")
+parser.add_argument("--apikeydst", dest="apikeydst", type=str, default="./data/youtube/api_key.json",
+                    help="YouTube v3 API key path.")
 parser.add_argument("--cm", dest="cm", type=str, default="./data/youtube/cm/",
                     help="This is the folder where the comments are going to be stored.")
 parser.add_argument("--cp", dest="cp", type=str, default="./data/youtube/cp/",
@@ -18,3 +21,6 @@ os.makedirs(args.cm, exist_ok=True)
 os.makedirs(args.cp, exist_ok=True)
 os.makedirs(args.rc, exist_ok=True)
 os.makedirs(args.yt, exist_ok=True)
+
+with open(args.apikeydst, "w") as f:
+    json.dump({"key": args.apikey}, f)
