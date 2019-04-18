@@ -3,6 +3,7 @@ from multiprocessing import Pool
 from bs4 import BeautifulSoup
 import pandas as pd
 import re
+import os
 
 LINKS_REGEX = r'(http|ftp|https)://([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?'
 INCELS_URL = "https://incels.co/forums/inceldom-discussion.2/page-"
@@ -129,8 +130,11 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="""""")
 
+    parser.add_argument("--dst", dest="dest", type=str, default="./data/forums/incels/",
+                        help="Location to save the forum.")
+
     parser.add_argument("--index", dest="index", type=str, default="./data/forums/incels/index.csv",
-                        help="Location of index file`")
+                        help="Location of index file.")
 
     parser.add_argument("--build_index", dest="build_index", action="store_true",
                         help="If true, builds index, otherwise gets posts.")
@@ -142,6 +146,8 @@ if __name__ == "__main__":
                         help="Runs w/o multiprocessing for debugging.")
 
     args = parser.parse_args()
+
+    os.makedirs(args.dst, exist_ok=True)
 
     if args.build_index:
         build_index(args.index)
