@@ -3,3 +3,4 @@ pandas>=0.23.4
 youtube-dl>=2019.3.1
 bs4>=4.4.1
 websockets==6.0
+requests_html>=0.10.0
