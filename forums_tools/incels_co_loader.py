@@ -22,7 +22,7 @@ def handle_date():
     pass
 
 
-def build_index(dst, nump):
+def build_index(src, dst, nump):
     session = get_html_session()
 
     # Gets the first page
@@ -33,12 +33,16 @@ def build_index(dst, nump):
 
     df_list = []
 
-    for page_num in range(1, number_of_pages + 1, 1):
+    for page_num in range(277, number_of_pages + 1, 1):
         print("Page {0}/{1}".format(page_num, number_of_pages))
         r = session.get(INCELS_URL + str(page_num))
 
         for thread in r.html.find(".structItem--thread"):
             has_type = thread.find('.labelLink', first=True) is not None
+
+            if thread.find('.structItem-cell--meta dd')[0].text == "–" or \
+                    thread.find('.structItem-cell--meta dd')[1].text == "–":
+                continue
 
             thread_dict = {
                 "type": thread.find('.labelLink', first=True).text if has_type else None,
@@ -151,7 +155,7 @@ if __name__ == "__main__":
     os.makedirs(args.dst, exist_ok=True)
 
     if args.build_index:
-        build_index(args.index, args.nump)
+        build_index(None, args.index, args.nump)
 
     else:
         to_run = list(pd.read_csv(args.index)["link"].values)
