@@ -66,11 +66,11 @@ def get_thread(link, session=None):
 
     for thread_page in range(1, number_of_pages_post + 1, 1):
         for post in get_posts_page(link, thread_page, session):
-            post_dict = get_post(post, session)
+            post_dict = get_post(post, link, session)
             df_list.append(post_dict)
 
     df = pd.DataFrame(df_list)
-    df.to_csv("./data/forums/incels/posts/" + re.sub("/", "", link[9:]) + ".csv")
+    df.to_csv("./data/forums/incels/posts/" + re.sub("/", "", link[9:]) + ".csv", index=False)
 
 
 def get_num_pages_post(link, session=None):
@@ -89,7 +89,7 @@ def get_posts_page(link, thread_page, session=None):
     return r_post.html.find('.message--post')
 
 
-def get_post(post, session=None):
+def get_post(post, link, session=None):
     number_blockquotes = post.find('.message-content')[0].html.count("</blockquote>")
     bs_text = BeautifulSoup(post.find('.message-content')[0].html, "lxml")
     for i in range(number_blockquotes):
@@ -108,7 +108,8 @@ def get_post(post, session=None):
         "id_post_interaction": [re.sub(r'/goto/post\?id=', "", list(v.links)[0])
                                 for v in post.find(".bbCodeBlock-title")],
         "date_post": post.find('.u-concealed')[0].text,
-        "links": re.findall(LINKS_REGEX, str(bs_text.html))
+        "links": re.findall(LINKS_REGEX, str(bs_text.html)),
+        "thread": link
     }
     return post_dict
 
@@ -130,7 +131,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="""""")
 
-    parser.add_argument("--dst", dest="dest", type=str, default="./data/forums/incels/",
+    parser.add_argument("--dst", dest="dst", type=str, default="./data/forums/incels/",
                         help="Location to save the forum.")
 
     parser.add_argument("--index", dest="index", type=str, default="./data/forums/incels/index.csv",
@@ -150,7 +151,7 @@ if __name__ == "__main__":
     os.makedirs(args.dst, exist_ok=True)
 
     if args.build_index:
-        build_index(args.index)
+        build_index(args.index, args.nump)
 
     else:
         to_run = list(pd.read_csv(args.index)["link"].values)
