@@ -32,7 +32,7 @@ def build_index(dst, nump):
 
     df_list = []
 
-    for page_num in range(1, 20 + 1, 1):
+    for page_num in range(1, number_of_pages + 1, 1):
         print("Page {0}/{1}".format(page_num, number_of_pages))
         r = session.get(INCELS_URL + str(page_num))
 
