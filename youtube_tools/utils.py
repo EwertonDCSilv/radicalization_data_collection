@@ -17,6 +17,7 @@ THREE_SECONDS_WAIT = 3
 
 def try_except(f, args):
     try:
+        print(args)
         f(**args)
     except Exception as ex:
         print(ex)
@@ -152,8 +153,6 @@ def channel(channel_id, channel_dst, name, data_step, category):
     df_list = []
     only_recent = False
     latest_date = datetime.strptime("19700101", '%Y%m%d')
-
-    json.dump(1)
 
     print(name, ":", channel_id)
 

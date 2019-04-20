@@ -35,7 +35,7 @@ for idx, row in df.iterrows():
         "data_step": args_pd["Data Collection step"],
         "category": args_pd["Category"]}
     if not args.debug:
-        to_run.append((try_except, args_func))
+        to_run.append((channel, args_func))
     else:
         to_run.append(partial(try_except, channel, args_func))
 

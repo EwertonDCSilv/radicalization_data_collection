@@ -26,6 +26,7 @@ def build_index(src, dst, nump):
 
     sub_urls = list(pd.read_csv(src)["subs"].values)
     session = get_html_session()
+    df_list = []
 
     for sub_url in sub_urls:
         print(sub_url)
@@ -36,7 +37,6 @@ def build_index(src, dst, nump):
         # Find number of pages
         number_of_pages = int([v.text for v in r.html.find(".toolbar-pagenav-wrapper .pagetotal")][-1])
 
-        df_list = []
         for page_num in range(1, number_of_pages + 1, 1):
             print("Page {0}/{1}".format(page_num, number_of_pages))
             r = session.get(BASE_AVMF_URL + sub_url + "/page" + str(page_num))
