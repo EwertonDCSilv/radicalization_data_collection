@@ -1,4 +1,4 @@
-from youtube_tools.utils import channel
+from youtube_tools.utils import channel, try_except
 from multiprocessing import Pool
 from functools import partial
 import pandas as pd
@@ -28,18 +28,20 @@ df = pd.read_csv(args.src)
 to_run = []
 for idx, row in df.iterrows():
     args_pd = dict(row)
+    args_func = {
+        "channel_dst": args.dst,
+        "name": args_pd["Name"],
+        "channel_id": args_pd["Id"],
+        "data_step": args_pd["Data Collection step"],
+        "category": args_pd["Category"]}
     if not args.debug:
-        to_run.append((args_pd["Id"], args.dst, args_pd["Name"],
-                       args_pd["Data Collection step"], args_pd["Category"]))
+        to_run.append((try_except, args_func))
     else:
-        to_run.append(partial(channel, channel_dst=args.dst,
-                              name=args_pd["Name"], channel_id=args_pd["Id"],
-                              data_step=args_pd["Data Collection step"],
-                              category=args_pd["Category"]))
+        to_run.append(partial(try_except, channel, args_func))
 
 if not args.debug:
     p = Pool(args.nump)
-    p.starmap(channel, to_run)
+    p.starmap(try_except, to_run)
 else:
     for i in to_run:
         i()

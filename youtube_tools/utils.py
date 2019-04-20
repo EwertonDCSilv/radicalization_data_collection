@@ -15,6 +15,14 @@ YT_CHANNEL_URL = "https://www.youtube.com/channel/"
 THREE_SECONDS_WAIT = 3
 
 
+def try_except(f, args):
+    try:
+        f(**args)
+    except Exception as ex:
+        print(ex)
+        return None
+
+
 def existing_video_check(channel_id, channel_dst, row_interest, video_ids):
     df_list = []
     if os.path.isfile("{0}/{1}.csv".format(channel_dst, channel_id)):
@@ -112,13 +120,14 @@ def videos_in_channel(channel_id, dateafter, only_recent=False):
 
     t1 = datetime.now()
 
-    args_dl = {"ignoreerrors": True, "dateafter": dateafter.strftime("today")}
+    args_dl = {"ignoreerrors": True, "dateafter": dateafter.strftime("today"), "verbose": False}
 
     if only_recent:
         args_dl = {"playlistend": 10}
 
     with youtube_dl.YoutubeDL(args_dl) as ydl:
         playd = ydl.extract_info(playlist_id, download=False)
+        print(playd)
         videos = [{"Id": channel_id,
                    "description": vid["description"],
                    "view_count": vid["view_count"],
@@ -143,6 +152,8 @@ def channel(channel_id, channel_dst, name, data_step, category):
     df_list = []
     only_recent = False
     latest_date = datetime.strptime("19700101", '%Y%m%d')
+
+    json.dump(1)
 
     print(name, ":", channel_id)
 
