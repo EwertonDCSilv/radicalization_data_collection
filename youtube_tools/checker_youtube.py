@@ -1,11 +1,18 @@
 import pandas.errors as pderr
 import pandas as pd
+import argparse
 import json
 import os
 
-src_folder = "./data/youtube/yt/yt/"
+parser = argparse.ArgumentParser(description="""""")
 
-src_graph = "./data/youtube/rc/recommended_20190416Apr1555420335.jsonl"
+parser.add_argument("--src", dest="src", type=str, default="./data/youtube/yt/",
+                    help="Source folder created by `loader_youtube.py`")
+
+parser.add_argument("--graph", dest="graph", type=str, default="./data/youtube/rc/recommended_20190416Apr.jsonl",
+                    help="Source folder created by `loader_youtube.py`")
+
+args = parser.parse_args()
 
 
 def error_msg(channel_id, name, error_msg):
@@ -13,12 +20,12 @@ def error_msg(channel_id, name, error_msg):
     print("-" * 60)
 
 
-with open(src_graph) as f:
+with open(args.graph) as f:
     for line in f.readlines():
         channel = json.loads(line)
 
         try:
-            df = pd.read_csv(src_folder + channel["channel_id"] + ".csv")
+            df = pd.read_csv(args.src + channel["channel_id"] + ".csv")
             num_videos, expected_num_videos = len(df), int(channel["statistics"]["videoCount"])
 
             if num_videos < expected_num_videos and \
@@ -32,5 +39,5 @@ with open(src_graph) as f:
             error_msg(channel["channel_id"], channel["name"], "Does Not Exists!")
 
         except pderr.EmptyDataError:
-            os.remove(src_folder + channel["channel_id"] + ".csv")
+            os.remove(args.src + channel["channel_id"] + ".csv")
             error_msg(channel["channel_id"], channel["name"], "Empty")
