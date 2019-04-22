@@ -121,10 +121,11 @@ def videos_in_channel(channel_id, dateafter, only_recent=False):
 
     t1 = datetime.now()
 
-    args_dl = {"ignoreerrors": True, "dateafter": dateafter.strftime("today"), "verbose": False}
+    args_dl = {"ignoreerrors": True, "dateafter": dateafter.strftime("today"), "quiet": True}
 
     if only_recent:
         args_dl = {"playlistend": 10}
+        return []
 
     with youtube_dl.YoutubeDL(args_dl) as ydl:
         playd = ydl.extract_info(playlist_id, download=False)
@@ -207,7 +208,8 @@ def get_channel_stats_n_desc(channel_id, api_key, session=None):
         statistics = v.json()["items"][0]["statistics"]
         description = v.json()["items"][0]["snippet"]["description"]
         return {"statistics": statistics, "description": description}
-    except Exception:
+    except Exception as exc:
+        print(exc)
         print("Could not load statistics for {0}".format(channel_id))
         return {"statistics": None, "description": None}
 

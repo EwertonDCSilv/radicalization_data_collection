@@ -38,7 +38,7 @@ parser.add_argument("--key_path", dest="key_path", type=str, default="./data/you
 
 parser.add_argument("--key", dest="key", default=None, help="ytv3 API key.")
 
-parser.add_argument("--num_processes", dest="nump", type=int, default=8,
+parser.add_argument("--nump", dest="nump", type=int, default=8,
                     help="Number of simultaneous processes.")
 
 parser.add_argument("--debug", dest="debug", action="store_true",
