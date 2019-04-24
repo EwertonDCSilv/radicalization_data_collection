@@ -121,11 +121,11 @@ def videos_in_channel(channel_id, dateafter, only_recent=False):
 
     t1 = datetime.now()
 
-    args_dl = {"ignoreerrors": True, "dateafter": dateafter.strftime("today"), "quiet": True}
+    args_dl = {"ignoreerrors": True, "dateafter": dateafter.strftime("today"), "quiet": False, "verbose": True,
+               "buffersize": "100M", "http_chunk_size": "30M"}
 
     if only_recent:
         args_dl = {"playlistend": 10}
-        return []
 
     with youtube_dl.YoutubeDL(args_dl) as ydl:
         playd = ydl.extract_info(playlist_id, download=False)
@@ -180,8 +180,12 @@ def channel(channel_id, channel_dst, name, data_step, category):
         video["category"] = category
         video["id"] = channel_id
         df_list.append(video)
-
-    df = pd.DataFrame(df_list)
+    if len(df_list) > 0:
+        df = pd.DataFrame(df_list)
+    else:
+        df = pd.DataFrame(
+            columns=["Id", "category", "crawl_date", "description", "dislike_count", "id", "like_count", "name", "step",
+                     "title", "upload_date", "video_id", "view_count"])
     df.to_csv("{0}/{1}.csv".format(channel_dst, channel_id), index=False)
 
 
