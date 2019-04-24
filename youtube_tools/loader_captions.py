@@ -26,7 +26,7 @@ parser.add_argument("--src", dest="src", type=str, default="./data/youtube/yt/",
 parser.add_argument("--dst", dest="dst", type=str, default="./data/youtube/cp/",
                     help="Where to save the output files.")
 
-parser.add_argument("--nump", dest="nump", type=int, default=10,
+parser.add_argument("--nump", dest="nump", type=int, default=5,
                     help="Number of simultaneous processes.")
 
 parser.add_argument("--debug", dest="debug", action="store_true",
