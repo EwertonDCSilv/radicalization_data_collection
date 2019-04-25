@@ -9,6 +9,7 @@ LINKS_REGEX = r'(http|ftp|https)://([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:/~+#-
 INCELS_URL = "https://incels.co/forums/inceldom-discussion.2/page-"
 INCELS_THREAD_BASE = "https://incels.co"
 
+
 def get_html_session(session=None):
     if session is None:
         print("new html session")
@@ -16,8 +17,10 @@ def get_html_session(session=None):
     else:
         return session
 
+
 def handle_date():
     pass
+
 
 def build_index(src, dst, nump):
     session = get_html_session()
@@ -114,8 +117,10 @@ def get_post(post, link, session=None):
     }
     return post_dict
 
+
 if __name__ == "__main__":
     import argparse
+
 
     def get_thread_global(link):
         if session_global is not None:
@@ -126,6 +131,7 @@ if __name__ == "__main__":
     def initialize_worker():
         global session_global
         session_global = HTMLSession()
+
 
     parser = argparse.ArgumentParser(description="""""")
 
