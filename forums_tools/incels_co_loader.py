@@ -152,7 +152,8 @@ if __name__ == "__main__":
         build_index(None, args.index, args.nump)
 
     else:
-        to_run = list(pd.read_csv(args.index)["link"].values)
+        #to_run = list(pd.read_csv(args.index)["link"].values)
+        to_run = list(pd.read_csv("a.csv")["link"].values)
         if args.debug:
             for i in to_run:
                 get_thread(to_run)
