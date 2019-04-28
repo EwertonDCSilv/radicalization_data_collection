@@ -59,7 +59,6 @@ def build_index(src, dst, nump):
 
     df.to_csv(dst)
 
-
 def get_thread(link, session=None):
     session = get_html_session(session)
     number_of_pages_post = get_num_pages_post(link, session)
@@ -73,7 +72,6 @@ def get_thread(link, session=None):
     df = pd.DataFrame(df_list)
     df.to_csv("./data/forums/incels/posts/" + re.sub("/", "", link[9:]) + ".csv", index=False)
 
-
 def get_num_pages_post(link, session=None):
     session = get_html_session(session)
     r_post = session.get(INCELS_THREAD_BASE + link)
@@ -83,22 +81,21 @@ def get_num_pages_post(link, session=None):
         number_of_pages_post = 1
     return number_of_pages_post
 
-
 def get_posts_page(link, thread_page, session=None):
     session = get_html_session(session)
     r_post = session.get(INCELS_THREAD_BASE + link + "page-" + str(thread_page))
     return r_post.html.find('.message--post')
 
-
 def get_post(post, link, session=None):
     number_blockquotes = post.find('.message-content')[0].html.count("</blockquote>")
     bs_text = BeautifulSoup(post.find('.message-content')[0].html, "lxml")
+    
     for i in range(number_blockquotes):
         bs_text.blockquote.decompose()
 
     post_dict = {
         "author": post.find('.username', first=True).text,
-        "link_author": list(post.find('.username', first=True).links)[0],
+        #"link_author": list(post.find('.username', first=True).links)[0],
         "resume_author": post.find('.message-userTitle', first=True).text,
         "joined_author": post.find('.message-userExtras dd', first=True).text,
         "messages_author": int(re.sub(",", "", post.find('.message-userExtras dd')[1].text)),
@@ -121,7 +118,6 @@ if __name__ == "__main__":
         if session_global is not None:
             session = session_global
         get_thread(link, session)
-
 
     def initialize_worker():
         global session_global
@@ -152,11 +148,12 @@ if __name__ == "__main__":
         build_index(None, args.index, args.nump)
 
     else:
-        #to_run = list(pd.read_csv(args.index)["link"].values)
-        to_run = list(pd.read_csv("a.csv")["link"].values)
+        to_run = list(pd.read_csv(args.index)["link"].values)
+    
         if args.debug:
-            for i in to_run:
-                get_thread(to_run)
+            for link in to_run:
+                get_thread(link)
         else:
             p = Pool(args.nump, initializer=initialize_worker)
-            p.map(get_thread_global, to_run)
+            for link in to_run:
+                p.map(get_thread_global, link)
