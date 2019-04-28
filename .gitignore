@@ -2,8 +2,8 @@ node_modules/
 secrets.json
 .idea/*
 data/Stormfront
-forums_tools/data/*
-forums_tools/.vscode/*
-data/*
-.vscode/*
+/forums_tools/data/*
+/forums_tools/.vscode/*
+/data/*
+/.vscode/*
 data/youtube/api_key.json
