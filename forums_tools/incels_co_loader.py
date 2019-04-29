@@ -19,7 +19,7 @@ def get_html_session(session=None):
     else:
         return session
 
-def handle_date(dateTime):
+def handle_date(datePost):
 
     weekDayList = {
         "Monday": 0,
@@ -72,7 +72,7 @@ def handle_date(dateTime):
         elif("Today" in weekDay[0]):
             realDate = currentDate - dateutil.relativedelta.relativedelta(days=0) 
         
-        if('am' in dateTime or "12:" in dateTime):
+        if('am' in datePost or "12:" in datePost):
             weekDayHour = weekDay[2].split(':')
             realDate = realDate.replace(hour=int(weekDayHour[0]), minute=int(weekDayHour[1]))
         else:
@@ -81,7 +81,7 @@ def handle_date(dateTime):
 
     else:
         print("Formatacao simples")
-        print("------------- {} ---------------".format(dateTime))
+        print("------------- {} ---------------".format(datePost))
         
         realDate = realDate.replace(day=2, month=int(monthLista[weekDay[0]]), year=int(weekDay[2]))
 
