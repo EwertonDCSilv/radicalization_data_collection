@@ -1,6 +1,9 @@
+from datetime import datetime
+import dateutil.relativedelta
 from requests_html import HTMLSession
-from multiprocessing import Pool
+#from multiprocessing import Pool
 from bs4 import BeautifulSoup
+import multiprocessing as mp
 import pandas as pd
 import re
 import os
@@ -16,8 +19,75 @@ def get_html_session(session=None):
     else:
         return session
 
-def handle_date():
-    pass
+def handle_date(dateTime):
+
+    weekDayList = {
+        "Monday": 0,
+        "Tuesday": 1,
+        "Wednesday": 2,
+        "Thursday": 3,
+        "Friday": 4,
+        "Saturday": 5,
+        "Sunday": 6,
+        "Yesterday": -1,
+        "Today": -1
+    }
+
+        
+    monthLista = {
+        "Jan": 1,
+        "Feb": 2,
+        "Mar": 3,
+        "Apr": 4,
+        "May": 5,
+        "Jun": 6,
+        "Jul": 7,
+        "Aug": 8,
+        "Sep": 9,
+        "Oct": 10,
+        "Nov": 11,
+        "Dec": 12,
+    }
+
+
+    weekDay = dateTime.split()
+
+    currentDate = datetime.today()
+    realDate = datetime.today()
+    currentDate = currentDate.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    if(weekDay[0] in weekDayList):
+    
+        if(weekDayList[weekDay[0]] > currentDate.today().weekday() and weekDayList[weekDay[0]] != -1):
+            numberDay = (7-weekDayList[weekDay[0]]) + currentDate.today().weekday()
+            realDate = currentDate - dateutil.relativedelta.relativedelta(days=numberDay)
+
+        elif(weekDayList[weekDay[0]] < currentDate.today().weekday() and weekDayList[weekDay[0]] != -1):
+            numberDay = currentDate.today().weekday() - weekDayList[weekDay[0]]
+            realDate = currentDate - dateutil.relativedelta.relativedelta(days=numberDay)
+        
+        elif("Yesterday" in weekDay[0]):
+            realDate = currentDate - dateutil.relativedelta.relativedelta(days=1) 
+        
+        elif("Today" in weekDay[0]):
+            realDate = currentDate - dateutil.relativedelta.relativedelta(days=0) 
+        
+        if('am' in dateTime or "12:" in dateTime):
+            weekDayHour = weekDay[2].split(':')
+            realDate = realDate.replace(hour=int(weekDayHour[0]), minute=int(weekDayHour[1]))
+        else:
+            weekDayHour = weekDay[2].split(':')
+            realDate = realDate.replace(hour=int(weekDayHour[0])+12, minute=int(weekDayHour[1]))
+
+    else:
+        print("Formatacao simples")
+        print("------------- {} ---------------".format(dateTime))
+        
+        realDate = realDate.replace(day=2, month=int(monthLista[weekDay[0]]), year=int(weekDay[2]))
+
+        #realDate = 0
+    
+    return realDate
 
 def build_index(src, dst, nump):
     session = get_html_session()
@@ -105,7 +175,7 @@ def get_post(post, link, session=None):
         "id_post": re.sub("js-post-", "", post.attrs["id"]),
         "id_post_interaction": [re.sub(r'/goto/post\?id=', "", list(v.links)[0])
                                 for v in post.find(".bbCodeBlock-title")],
-        "date_post": post.find('.u-concealed')[0].text,
+        "date_post": handle_date(post.find('.u-concealed')[0].text),
         "links": re.findall(LINKS_REGEX, str(bs_text.html)),
         "thread": link
     }
@@ -117,7 +187,10 @@ if __name__ == "__main__":
     def get_thread_global(link):
         if session_global is not None:
             session = session_global
-        get_thread(link, session)
+        #get_thread(link, session)
+        print("{}\n".format(link))
+        print("{}\n".format(session))
+        exit()
 
     def initialize_worker():
         global session_global
@@ -154,6 +227,24 @@ if __name__ == "__main__":
             for link in to_run:
                 get_thread(link)
         else:
-            p = Pool(args.nump, initializer=initialize_worker)
+            #p = Pool(args.nump, initializer=initialize_worker)
+            #for link in to_run:
+                #p.map(get_thread_global, link)
+                #print("AAAAAAA")
+
+            processes = []
+            k = 0
+
             for link in to_run:
-                p.map(get_thread_global, link)
+                if k == 4:
+                    break
+                processes.append(mp.Process(target=get_thread_global, args=(link)))
+                k = k + 1
+    
+            # Run processes
+            for p in processes:
+                p.start()
+
+            # Exit the completed processes
+            for p in processes:
+                p.join()
