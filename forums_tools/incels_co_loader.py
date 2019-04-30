@@ -32,7 +32,6 @@ def handle_date(datePost):
         "Yesterday": -1,
         "Today": -1
     }
-
         
     monthLista = {
         "Jan": 1,
@@ -49,8 +48,8 @@ def handle_date(datePost):
         "Dec": 12,
     }
 
-
-    weekDay = dateTime.split()
+    datePost = datePost.replace(",","")
+    weekDay = datePost.split()
 
     currentDate = datetime.today()
     realDate = datetime.today()
@@ -80,12 +79,7 @@ def handle_date(datePost):
             realDate = realDate.replace(hour=int(weekDayHour[0])+12, minute=int(weekDayHour[1]))
 
     else:
-        print("Formatacao simples")
-        print("------------- {} ---------------".format(datePost))
-        
-        realDate = realDate.replace(day=2, month=int(monthLista[weekDay[0]]), year=int(weekDay[2]))
-
-        #realDate = 0
+        realDate = realDate.replace(day=int(weekDay[1]), month=int(monthLista[weekDay[0]]), year=int(weekDay[2]),hour=0, minute=0, second=0, microsecond=0)
     
     return realDate
 
