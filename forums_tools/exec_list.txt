@@ -1,9 +1,9 @@
-Code	FILE	LINK
-[NO]	[NO]	https://d2ec906f9aea-003845.vbulletin.net
-[NO]	[OK]	https://incels.co/
-[NO]	[OK]	http://love-shy.com/lsbb/
-[NO]	[OK]	https://redpilltalk.com/
-[NO]	[OK]	https://www.mgtow.com/forums/
-[NO]	[OK]	https://www.rooshvforum.com/
-[NO]	[OK]	https://www.pick-up-artist-forum.com/
-[NO]	[OK]	http://www.theattractionforums.com/
+Tag   Code	FILE	LINK
+[OK]  [OK]	[OK]	https://incels.co/
+[OK]  [NO]	[OK]	https://www.mgtow.com/forums/
+[OK]  [NO]	[OK]	https://redpilltalk.com/
+[OK]  [NO]	[OK]	https://www.pick-up-artist-forum.com/
+[OK]  [NO]	[OK]	http://www.theattractionforums.com/
+[NO]  [NO]	[OK]	https://www.rooshvforum.com/
+[NO]  [NO]	[NO]	https://d2ec906f9aea-003845.vbulletin.net
+[NO]  [NO]	[OK]	http://love-shy.com/lsbb/

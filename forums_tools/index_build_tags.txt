@@ -1,0 +1,105 @@
+{
+	mgtow:{
+		indes:{
+			"type": none,
+			"title": $(".bbp-topics .type-topic .bbp-topic-permalink"),
+			"link": $(".bbp-topics .type-topic .bbp-topic-permalink"),
+			"author_topic": $(".bbp-topics .type-topic .bbp-author-name"),
+			"replies": $(".bbp-topics .type-topic "),
+			"views": $(".bbp-topics .type-topic .bbp-topic-voice-count"),
+			"subforum": $(".bbp-topics .type-topic .bbp-topic-reply-count"),
+		},
+		pages:{
+			"author": $(".bbp-replies .bbp-author-name"),
+			"resume_author": none
+			"joined_author": none,
+			"messages_author": none,
+			"text_post": $(".bbp-replies .topic .bbp-reply-content"),
+			"html_post": $(".bbp-replies .topic .bbp-reply-content"),
+			"number_post": none#Use a count,
+		*"id_post": $(".bbp-replies "),
+		*"id_post_interaction": $(".bbp-replies "),
+			"date_post": $(".bbp-replies .bbp-reply-post-date"),
+			"links": $(".bbp-replies"),
+			"thread": link,
+		}
+	},
+	
+	redpilltalk:{
+		indes:{
+			"type": none,
+			"title": $(".topics .topictitle"),
+			"link": $(".topics .topictitle"),
+			"author_topic": $('.topics .icon dt a').eq(3),
+			"replies": $(".topics .posts"),
+			"views": $(".topics .views"),
+			"subforum": link.name,
+		},
+		pages:{
+			"author": $("#page-body .post .post-author"),
+			"resume_author": none,
+			"joined_author": $('#page-body .post dl dd').eq(0)
+			"messages_author": $('#page-body .post dl dd').eq(1)
+			"text_post": $('#page-body .post .content'),
+			"html_post": $('#page-body .post .content'),
+			"number_post": none#Use a count,
+			"id_post": $("#page-body .post "),
+			"id_post_interaction": $("#page-body .post "),
+			"date_post": $("#page-body .post .author time"),
+			"links": $("#page-body .post .content"),
+			"thread": link,
+		}
+	},
+	
+	pick_artist:{
+		indes:{
+			"type": none,
+			"title": $("#pagecontent .topictitle "),
+			"link": $("#pagecontent .topictitle"),
+			"author_topic": $("#pagecontent .topicauthor"),
+			"replies": $("#pagecontent .topicdetails").eq(0),
+			"views": $("#pagecontent .topicdetails ").eq(0),
+			"subforum": link.name,
+		},
+		pages:{
+			"author": $("#pagecontent .postauthor "),
+				*"resume_author": none,
+				*"joined_author": $('').eq(0)
+				*"messages_author": $('').eq(1)
+			"text_post": $('#pagecontent tr td').eq(9),
+			"html_post": $('#pagecontent tr td').eq(9),
+			"number_post": none#Use a count,
+				*"id_post": $(""),
+				*"id_post_interaction": $(""),
+			"date_post": $("#pagecontent .gensmall "),
+			"links": $(""),
+			"thread": $('#pagecontent tr td').eq(9),
+		}
+	},
+	
+	theattractionforums:{
+		indes:{
+			"type": none,
+			"title": $(".threadlist .title"),
+			"link": $(".threadlist .title"),
+			"author_topic": $(".threadlist .author"),
+			"replies": $(".threadlist .threadstats li").eq(0),
+			"views": $(".threadlist .threadstats li").eq(1),
+			"subforum": link.name,
+		},
+		pages:{
+			"author": $(".postlist .postbit .username"),
+			"resume_author": none,
+			*"joined_author": $(""),
+			"messages_author": none,
+			"text_post": $('.postlist .postbit .postcontent'),
+			"html_post": $('.postlist .postbit .postcontent')
+			"number_post": $('.postlist .postbit .nodecontrols'),
+				*"id_post": $(""),
+				*"id_post_interaction": $(""),
+			"date_post": $(".postlist .postdate"),
+			"links": $('.postlist .postbit .postcontent').eq(0),
+			"thread": $('#pagecontent tr td').eq(9),
+		}
+	},
+}
