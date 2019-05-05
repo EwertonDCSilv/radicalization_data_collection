@@ -1,6 +1,6 @@
-#from forums_tools.mgtow_utils import build_index, get_thread, build_topics_index
+#from forums_tools.redpilltalk_utils import build_index, get_thread, build_topics_index
 #from forums_tools.utils import get_thread_global, initialize_worker, get_html_session
-from mgtow_utils import build_index, get_thread, build_topics_index
+from redpilltalk_utils import build_index, get_thread, build_topics_index
 from utils import get_thread_global, initialize_worker, get_html_session
 from multiprocessing import Pool
 import pandas as pd
@@ -8,15 +8,15 @@ import argparse
 import os
 
 parser = argparse.ArgumentParser(
-    description="""This script downloads the mgtow is forum""")
+    description="""This script downloads the redpilltalk is forum""")
 
-parser.add_argument("--dst", dest="dst", type=str, default="./data/forums/mgtow/",
+parser.add_argument("--dst", dest="dst", type=str, default="./data/forums/redpilltalk/",
                     help="Location to save the forum.")
 
-parser.add_argument("--index", dest="index", type=str, default="./data/forums/mgtow/index.csv",
+parser.add_argument("--index", dest="index", type=str, default="./data/forums/redpilltalk/index.csv",
                     help="Location of index file.")
 
-parser.add_argument("--index_topics", dest="index_topics", type=str, default="./data/forums/mgtow/index_topics.csv",
+parser.add_argument("--index_topics", dest="index_topics", type=str, default="./data/forums/redpilltalk/index_topics.csv",
                     help="Location of index file.")
 
 parser.add_argument("--build_index", dest="build_index", action="store_true",
@@ -39,7 +39,7 @@ args = parser.parse_args()
 os.makedirs(args.dst, exist_ok=True)
 
 if args.build_topics_index:
-    build_topics_index(None, args.index, args.nump)
+    build_topics_index(None, args.index_topics, args.nump)
 
 elif args.build_index:
     topics_list = list(pd.read_csv(args.index_topics)["link"].values)

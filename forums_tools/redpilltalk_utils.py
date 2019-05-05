@@ -1,5 +1,5 @@
-#from forums_tools.utils import get_html_session
-#from forums_tools.dateutil.relativedelta import relativedelta
+# from forums_tools.utils import get_html_session
+# from forums_tools.dateutil.relativedelta import relativedelta
 from utils import get_html_session
 from dateutil.relativedelta import relativedelta
 from bs4 import BeautifulSoup
@@ -16,40 +16,40 @@ month_list = {"Jan": 1, "Feb": 2, "Mar": 3, "Apr": 4, "May": 5, "Jun": 6, "Jul":
 
 LINKS_REGEX = r'(http|ftp|https)://([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?'
 
-INCELS_URL = "https://www.mgtow.com/forums"
+INCELS_URL = "https://redpilltalk.com"
 
-INCELS_THREAD_BASE = "https://www.mgtow.com/"
+INCELS_THREAD_BASE = "https://redpilltalk.com"
 
 
 def build_index(link, dst, nump):
     session = get_html_session()
 
     # Gets the first page
-    r = session.get(INCELS_THREAD_BASE + link+"page/" + str(1))
+    r = session.get(INCELS_URL+link+"page/" + str(1))
 
     # Find number of pages
-    number_of_pages = int(r.html.find(".bbp-pagination a")
-                          [1].text.replace(",", ""))
+    number_of_pages = int(r.html.find(".pagination span a")[-1].text)
 
     # Get a name of subforum
-    subforum = r.html.find(".bbp-breadcrumb-current")[0].text
+    subforum = r.html.find("#page-body h2")[0].text
 
     df_list = []
 
     for page_num in range(1, number_of_pages + 1, 1):
         print("Forum: {0} - Page {1}/{2}".format(subforum,
                                                  page_num, number_of_pages))
+
         r = session.get(INCELS_THREAD_BASE + link+"page/" + str(page_num))
 
-        for thread in r.html.find(".bbp-topics"):
+        for thread in r.html.find(".topics"):
 
             thread_dict = {
                 "type": None,
-                "title": thread.find('.type-topic .bbp-topic-permalink')[0].text,
-                "link": list(thread.find('.type-topic .bbp-topic-permalink')[1].links)[0],
-                "author_topic": thread.find('.type-topic .bbp-author-name')[0].text,
-                "replies": thread.find('.type-topic .bbp-topic-reply-count')[0].text,
-                "views":  thread.find('.type-topic .bbp-topic-voice-count')[0].text,
+                "title": thread.find(" .topictitle")[0].text,
+                "link": str(list(thread.find(".topics .topictitle")[0].links)[0]).replace("./", "/"),
+                "author_topic": thread.find('.topics .icon dt a')[3].text,
+                "replies": int(str(thread.find(".topics .posts")[0].text).replace("Replies", "")),
+                "views": int(str(thread.find(".topics .views")[0].text).replace("Views", "")),
                 "subforum": subforum
             }
 
@@ -68,14 +68,16 @@ def build_topics_index(src, dst, nump):
 
     df_list = []
 
-    for thread in r.html.find("#grid .element-item "):
+    for thread in r.html.find(".topiclist dl"):
 
-        thread_dict = {
-            "link": list(thread.find("a")[0].links)[0],
-            "subforum": thread.find('h4')[0].text,
-        }
+        if thread.find(".feed-icon-forum"):
 
-        df_list.append(thread_dict)
+            thread_dict = {
+                "link": str(list(thread.find(".forumtitle")[0].links)[0]).replace("./", "/"),
+                "subforum": thread.find(".forumtitle")[0].text,
+            }
+
+            df_list.append(thread_dict)
 
     df = pd.DataFrame(df_list)
     df.to_csv(dst)
@@ -84,6 +86,8 @@ def build_topics_index(src, dst, nump):
 def get_thread(link, session=None):
 
     session = get_html_session(session)
+    link = INCELS_URL+link
+
     number_of_pages_post = get_num_pages_post(link, session)
     df_list = []
 
@@ -96,20 +100,23 @@ def get_thread(link, session=None):
                 traceback.print_exc()
                 print("problem with post", idx, ":", link)
 
-        exit()
-
     df = pd.DataFrame(df_list)
-    df.to_csv("./data/forums/mgtow/posts/" +
-              re.sub("/", "", link[9:]) + ".csv", index=False)
+
+    link_array = link[9:].split("=")
+    sufix = re.sub("/", "",link_array[-1] )
+
+    print(sufix)
+
+    df.to_csv("./data/forums/redpilltalk/posts/redpilltalk_"+sufix + ".csv", index=False)
 
 
 def get_num_pages_post(link, session=None):
     session = get_html_session(session)
-    r_post = session.get(
-        "https://www.mgtow.com/forums/topic/back-again-advice-needed/")
+    r_post = session.get(link)
+
     try:
-        number_of_pages_post = int(r_post.html.find(
-            ".bbp-pagination-links a")[-2].text)
+        number_of_pages_post = int(
+            r_post.html.find(".pagination span a")[-1].text)
     except IndexError:
         number_of_pages_post = 1
     return number_of_pages_post
@@ -117,16 +124,17 @@ def get_num_pages_post(link, session=None):
 
 def get_posts_page(link, thread_page, session=None):
     session = get_html_session(session)
-    #r_post = session.get(INCELS_THREAD_BASE + link +"page/" + str(thread_page))
+    # r_post = session.get(INCELS_THREAD_BASE + link +"page/" + str(thread_page))
     r_post = session.get(
-        "https://www.mgtow.com/forums/topic/introduction-30/" + "page/" + str(thread_page))
-    return r_post.html.find('.topic')
+        "https://redpilltalk.com/viewtopic.php?f=11&t=172" +
+        "&start=" + str((int(thread_page)-1)*30))
+    return r_post.html.find('#page-body')
 
 
 def get_post(post, link, session=None):
     # number_blockquotes = post.find(
     #    '.message-content')[0].html.count("</blockquote>")
-    #bs_text = BeautifulSoup(post.find('.message-content')[0].html, "lxml")
+    # bs_text = BeautifulSoup(post.find('.message-content')[0].html, "lxml")
     #
     # for i in range(number_blockquotes):
     #    try:
@@ -134,24 +142,21 @@ def get_post(post, link, session=None):
     #    except AttributeError:
     #        pass
 
-    has_author = post.find(".bbp-reply-author a") is not None
-
     post_dict = {
 
-        "author": post.find(".bbp-reply-author a") if has_author else post.find(".bbp-reply-author"),
+        "author": post.find(".post .post-author")[0].text.replace('\n',''),
         "resume_author": None,
-        "joined_author": None,
-        "messages_author": None,
-        "text_post": post.find(" .bbp-reply-content", first=True).text,
-        "html_post": post.find(" .bbp-reply-content")[0].html,
+        "joined_author": post.find('.post dl dd')[0].text.replace('\n',''),
+        "messages_author": post.find('.post dl dd')[1].text.replace('\n',''),
+        "text_post": post.find('.post .content')[0].text.replace('\n',''),
+        "html_post": post.find('.post .content')[0].html.replace('\n',''),
         "number_post": None,  # Use a count,
-        # "id_post": post.find(""),
-        # "id_post_interaction": post.find(""),
-        "date_post": post.find(".bbp-reply-post-date").text,
-        "links": re.findall(LINKS_REGEX, str(post.find(" .bbp-reply-content")[0].html)),
+        "id_post": None,
+        "id_post_interaction": None,
+        "date_post": post.find(".post .author time")[0].text.replace('\n',''),
+        "links": re.findall(LINKS_REGEX, str(post.find(".post .content")[0].html)),
         "thread": link,
     }
-    print(post_dict)
     return post_dict
 
 
