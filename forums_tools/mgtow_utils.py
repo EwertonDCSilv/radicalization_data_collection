@@ -96,15 +96,20 @@ def get_thread(link, session=None):
                 traceback.print_exc()
                 print("problem with post", idx, ":", link)
 
+        exit()
+
     df = pd.DataFrame(df_list)
-    df.to_csv("./data/forums/mgtow/posts/" +re.sub("/", "", link[9:]) + ".csv", index=False)
+    df.to_csv("./data/forums/mgtow/posts/" +
+              re.sub("/", "", link[9:]) + ".csv", index=False)
 
 
 def get_num_pages_post(link, session=None):
     session = get_html_session(session)
-    r_post = session.get("https://www.mgtow.com/forums/topic/back-again-advice-needed/")
+    r_post = session.get(
+        "https://www.mgtow.com/forums/topic/back-again-advice-needed/")
     try:
-        number_of_pages_post = int(r_post.html.find(".bbp-pagination-links a")[-2].text)
+        number_of_pages_post = int(r_post.html.find(
+            ".bbp-pagination-links a")[-2].text)
     except IndexError:
         number_of_pages_post = 1
     return number_of_pages_post
@@ -113,54 +118,54 @@ def get_num_pages_post(link, session=None):
 def get_posts_page(link, thread_page, session=None):
     session = get_html_session(session)
     #r_post = session.get(INCELS_THREAD_BASE + link +"page/" + str(thread_page))
-    r_post = session.get("https://www.mgtow.com/forums/topic/introduction-30/" +"page/" + str(thread_page))
-    print((INCELS_THREAD_BASE + link +"page/" + str(thread_page)))
-    return r_post.html.find('.bbp-replies')
+    r_post = session.get(
+        "https://www.mgtow.com/forums/topic/introduction-30/" + "page/" + str(thread_page))
+    return r_post.html.find('.topic')
 
 
 def get_post(post, link, session=None):
-    #number_blockquotes = post.find(
+    # number_blockquotes = post.find(
     #    '.message-content')[0].html.count("</blockquote>")
     #bs_text = BeautifulSoup(post.find('.message-content')[0].html, "lxml")
     #
-    #for i in range(number_blockquotes):
+    # for i in range(number_blockquotes):
     #    try:
     #        bs_text.blockquote.decompose()
     #    except AttributeError:
     #        pass
 
-    print("Testeeee")
+    has_author = post.find(".bbp-reply-author a") is not None
 
     post_dict = {
-        #"author": post.find('.username', first=True).text,
-        #"resume_author": post.find('.message-userTitle', first=True).text,
-        #"joined_author": post.find('.message-userExtras dd', first=True).text,
-        #"messages_author": int(re.sub(",", "", post.find('.message-userExtras dd')[1].text)),
-        #"text_post": re.sub("[\n|\xa0]+", " ", bs_text.text),
-        #"html_post": post.find('.message-content')[0].html,
-        #"number_post": post.find('.message-attribution-opposite a')[1].text,
-        #"id_post": re.sub("js-post-", "", post.attrs["id"]),
-        #"id_post_interaction": [re.sub(r'/goto/post\?id=', "", list(v.links)[0])
+        # "author": post.find('.username', first=True).text,
+        # "resume_author": post.find('.message-userTitle', first=True).text,
+        # "joined_author": post.find('.message-userExtras dd', first=True).text,
+        # "messages_author": int(re.sub(",", "", post.find('.message-userExtras dd')[1].text)),
+        # "text_post": re.sub("[\n|\xa0]+", " ", bs_text.text),
+        # "html_post": post.find('.message-content')[0].html,
+        # "number_post": post.find('.message-attribution-opposite a')[1].text,
+        # "id_post": re.sub("js-post-", "", post.attrs["id"]),
+        # "id_post_interaction": [re.sub(r'/goto/post\?id=', "", list(v.links)[0])
         #                        for v in post.find(".bbCodeBlock-title")],
-        #"date_post": post.find('.u-concealed')[0].text,
-        #"links": re.findall(LINKS_REGEX, str(bs_text.html)),
-        #"thread": link
+        # "date_post": post.find('.u-concealed')[0].text,
+        # "links": re.findall(LINKS_REGEX, str(bs_text.html)),
+        # "thread": link
 
-        "author": post.find(".bbp-author-name", first=True).text.replace("\n",""),
+    
+        "author": post.find(".bbp-reply-author a") if has_author else post.find(".bbp-reply-author"),
         "resume_author": None,
         "joined_author": None,
         "messages_author": None,
-        #"text_post": post.find(".topic .bbp-reply-content", first=True).text,
-        #"html_post": post.find(".topic .bbp-reply-content")[0].html,
-        "number_post": None,#Use a count,
-        #"id_post": post.find(""),
-        #"id_post_interaction": post.find(""),
-        "date_post": post.find(".bbp-reply-post-date", first=True).text.replace("\n",""),
-        "links": post.find(".bbp-replies", first=True).text.replace("\n",""),
+        "text_post": post.find(" .bbp-reply-content", first=True).text,
+        "html_post": post.find(" .bbp-reply-content")[0].html,
+        "number_post": None,  # Use a count,
+        # "id_post": post.find(""),
+        # "id_post_interaction": post.find(""),
+        #"date_post": post.find(".bbp-reply-post-date").text,
+        "links": re.findall(LINKS_REGEX, str(post.find(" .bbp-reply-content")[0].html)),
         "thread": link,
     }
     print(post_dict)
-    #exit()
     return post_dict
 
 
