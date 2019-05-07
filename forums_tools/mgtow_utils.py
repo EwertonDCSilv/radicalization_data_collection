@@ -94,6 +94,8 @@ def get_thread(link, session=None):
     number_of_pages_post = get_num_pages_post(link, session)
     df_list = []
 
+    print("Blaaa:{}".format(number_of_pages_post))
+
     for thread_page in range(1, number_of_pages_post + 1, 1):
         for idx, post in enumerate(get_posts_page(link, thread_page, session)):
             try:
@@ -110,8 +112,7 @@ def get_thread(link, session=None):
 
 def get_num_pages_post(link, session=None):
     session = get_html_session(session)
-    r_post = session.get(
-        "https://www.mgtow.com/forums/topic/back-again-advice-needed/")
+    r_post = session.get(INCELS_THREAD_BASE + link)
     try:
         number_of_pages_post = int(r_post.html.find(
             ".bbp-pagination-links a")[-2].text)
@@ -122,9 +123,8 @@ def get_num_pages_post(link, session=None):
 
 def get_posts_page(link, thread_page, session=None):
     session = get_html_session(session)
-    #r_post = session.get(INCELS_THREAD_BASE + link +"page/" + str(thread_page))
-    r_post = session.get(
-        "https://www.mgtow.com/forums/topic/introduction-30/" + "page/" + str(thread_page))
+    r_post = session.get(INCELS_THREAD_BASE + link +"page/" + str(thread_page))
+    print(INCELS_THREAD_BASE + link +"page/" + str(thread_page))
     return r_post.html.find('.hentry')
 
 
@@ -151,10 +151,12 @@ def get_post(post, link, session=None):
 
     if post.find(".bbp-reply-content"):
 
-        content_text = post.find(".bbp-reply-content")[0].text.replace("\n", ""),
-        content_html = post.find(".bbp-reply-content")[0].html.replace("\n", ""),
-    else : 
-        content_text = None 
+        content_text = post.find(
+            ".bbp-reply-content")[0].text.replace("\n", ""),
+        content_html = post.find(
+            ".bbp-reply-content")[0].html.replace("\n", ""),
+    else:
+        content_text = None
         content_html = None
 
     post_dict = {
@@ -172,7 +174,7 @@ def get_post(post, link, session=None):
         "links": re.findall(LINKS_REGEX, str(content_html)),
         "thread": link,
     }
-    print(post_dict)
+
     return post_dict
 
 
