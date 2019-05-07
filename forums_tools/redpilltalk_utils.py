@@ -41,19 +41,25 @@ def build_index(link, dst, nump):
 
         r = session.get(INCELS_THREAD_BASE + link+"page/" + str(page_num))
 
-        for thread in r.html.find(".topics"):
+        for thread in r.html.find("dl"):
 
-            thread_dict = {
-                "type": None,
-                "title": thread.find(" .topictitle")[0].text,
-                "link": str(list(thread.find(".topics .topictitle")[0].links)[0]).replace("./", "/"),
-                "author_topic": thread.find('.topics .icon dt a')[3].text,
-                "replies": int(str(thread.find(".topics .posts")[0].text).replace("Replies", "")),
-                "views": int(str(thread.find(".topics .views")[0].text).replace("Views", "")),
-                "subforum": subforum
-            }
+            author = ''
+            #if thread.find('.icon dt a'):
+            #    author = thread.find('.icon dt a')[1].text
 
-            df_list.append(thread_dict)
+            if thread.find(".topictitle"):
+
+                thread_dict = {
+                    "type": None,
+                    "title": thread.find(".topictitle")[0].text,
+                    "link": str(list(thread.find(".topictitle")[0].links)[0]).replace("./", "/"),
+                    "author_topic": author,
+                    "replies": int(str(thread.find(".posts")[0].text).replace("Replies", "")),
+                    "views": int(str(thread.find(".views")[0].text).replace("Views", "")),
+                    "subforum": subforum
+                }
+
+                df_list.append(thread_dict)
 
     df = pd.DataFrame(df_list)
     df.to_csv(dst.replace(".csv", "")+"_"+subforum+".csv")
@@ -103,11 +109,10 @@ def get_thread(link, session=None):
     df = pd.DataFrame(df_list)
 
     link_array = link[9:].split("=")
-    sufix = re.sub("/", "",link_array[-1] )
+    sufix = re.sub("/", "", link_array[-1])
 
-    print(sufix)
-
-    df.to_csv("./data/forums/redpilltalk/posts/redpilltalk_"+sufix + ".csv", index=False)
+    df.to_csv("./data/forums/redpilltalk/posts/redpilltalk_" +
+              sufix + ".csv", index=False)
 
 
 def get_num_pages_post(link, session=None):
@@ -128,7 +133,7 @@ def get_posts_page(link, thread_page, session=None):
     r_post = session.get(
         "https://redpilltalk.com/viewtopic.php?f=11&t=172" +
         "&start=" + str((int(thread_page)-1)*30))
-    return r_post.html.find('#page-body')
+    return r_post.html.find('#page-body .post ')
 
 
 def get_post(post, link, session=None):
@@ -142,21 +147,49 @@ def get_post(post, link, session=None):
     #    except AttributeError:
     #        pass
 
+    if post.find(".post-author"):
+        autor = post.find(".post-author")[0].text.replace("\n", " ")
+    else:
+        autor = None
+
+    if post.find('dl dd'):
+        joined_author = post.find('dl dd')[0].text.replace("\n", " "),
+    else:
+        joined_author = None
+
+    if post.find('dl dd'):
+        messages_author = post.find('dl dd')[1].text.replace("\n", " "),
+    else:
+        messages_author = None
+
+    if post.find('.content'):
+        content_text = post.find('.content')[0].text.replace("\n", " "),
+        content_html = post.find('.content')[0].html.replace("\n", " "),
+    else:
+        content_text = ''
+        content_html = ''
+
+    if post.find(".author time"):
+        date_post = post.find(".author time")[0].text.replace("\n", " "),
+    else:
+        date_post = ''
+
     post_dict = {
 
-        "author": post.find(".post .post-author")[0].text.replace('\n',''),
+        "author": autor,
         "resume_author": None,
-        "joined_author": post.find('.post dl dd')[0].text.replace('\n',''),
-        "messages_author": post.find('.post dl dd')[1].text.replace('\n',''),
-        "text_post": post.find('.post .content')[0].text.replace('\n',''),
-        "html_post": post.find('.post .content')[0].html.replace('\n',''),
+        "joined_author": joined_author,
+        "messages_author": messages_author,
+        "text_post": content_text,
+        "html_post": content_html,
         "number_post": None,  # Use a count,
         "id_post": None,
         "id_post_interaction": None,
-        "date_post": post.find(".post .author time")[0].text.replace('\n',''),
-        "links": re.findall(LINKS_REGEX, str(post.find(".post .content")[0].html)),
+        "date_post": date_post,
+        "links": re.findall(LINKS_REGEX, str(content_html)),
         "thread": link,
     }
+
     return post_dict
 
 
