@@ -41,19 +41,26 @@ def build_index(link, dst, nump):
                                                  page_num, number_of_pages))
         r = session.get(INCELS_THREAD_BASE + link+"page/" + str(page_num))
 
-        for thread in r.html.find(".bbp-topics"):
+        for thread in r.html.find(".status-publish"):
+
+            if thread.find('.bbp-author-name'):
+                author_topic = thread.find(' .bbp-author-name')[0].text,
+            else:
+                author_topic = None
 
             thread_dict = {
                 "type": None,
-                "title": thread.find('.type-topic .bbp-topic-permalink')[0].text,
-                "link": list(thread.find('.type-topic .bbp-topic-permalink')[1].links)[0],
-                "author_topic": thread.find('.type-topic .bbp-author-name')[0].text,
-                "replies": thread.find('.type-topic .bbp-topic-reply-count')[0].text,
-                "views":  thread.find('.type-topic .bbp-topic-voice-count')[0].text,
+                "title": thread.find('.bbp-topic-permalink')[0].text,
+                "link": list(thread.find('.bbp-topic-permalink')[0].links)[0],
+                "author_topic": author_topic,
+                "replies": thread.find(' .bbp-topic-reply-count')[0].text,
+                "views":  thread.find(' .bbp-topic-voice-count')[0].text,
                 "subforum": subforum
             }
 
             df_list.append(thread_dict)
+
+    subforum = subforum.replace(" ", "_")
 
     df = pd.DataFrame(df_list)
     df.to_csv(dst.replace(".csv", "")+"_"+subforum+".csv")
@@ -96,11 +103,9 @@ def get_thread(link, session=None):
                 traceback.print_exc()
                 print("problem with post", idx, ":", link)
 
-        exit()
-
     df = pd.DataFrame(df_list)
     df.to_csv("./data/forums/mgtow/posts/" +
-              re.sub("/", "", link[9:]) + ".csv", index=False)
+              re.sub("/", "", link[9:].replace(" ", "_")) + ".csv", index=False)
 
 
 def get_num_pages_post(link, session=None):
@@ -120,7 +125,7 @@ def get_posts_page(link, thread_page, session=None):
     #r_post = session.get(INCELS_THREAD_BASE + link +"page/" + str(thread_page))
     r_post = session.get(
         "https://www.mgtow.com/forums/topic/introduction-30/" + "page/" + str(thread_page))
-    return r_post.html.find('.topic')
+    return r_post.html.find('.hentry')
 
 
 def get_post(post, link, session=None):
@@ -134,21 +139,37 @@ def get_post(post, link, session=None):
     #    except AttributeError:
     #        pass
 
-    has_author = post.find(".bbp-reply-author a") is not None
+    if post.find(".bbp-reply-post-date"):
+        date_post = post.find(".bbp-reply-post-date")[0].text.replace("\n", "")
+    else:
+        date_post = None
+
+    if post.find(".bbp-reply-author a"):
+        author = post.find(".bbp-reply-author a")[0].text
+    else:
+        author = None
+
+    if post.find(".bbp-reply-content"):
+
+        content_text = post.find(".bbp-reply-content")[0].text.replace("\n", ""),
+        content_html = post.find(".bbp-reply-content")[0].html.replace("\n", ""),
+    else : 
+        content_text = None 
+        content_html = None
 
     post_dict = {
 
-        "author": post.find(".bbp-reply-author a") if has_author else post.find(".bbp-reply-author"),
+        "author": author,
         "resume_author": None,
         "joined_author": None,
         "messages_author": None,
-        "text_post": post.find(" .bbp-reply-content", first=True).text,
-        "html_post": post.find(" .bbp-reply-content")[0].html,
-        "number_post": None,  # Use a count,
+        "text_post": content_text,
+        "html_post": content_html,
+        "number_post": None,
         # "id_post": post.find(""),
         # "id_post_interaction": post.find(""),
-        "date_post": post.find(".bbp-reply-post-date").text,
-        "links": re.findall(LINKS_REGEX, str(post.find(" .bbp-reply-content")[0].html)),
+        "date_post": date_post,
+        "links": re.findall(LINKS_REGEX, str(content_html)),
         "thread": link,
     }
     print(post_dict)

@@ -44,8 +44,8 @@ def build_index(link, dst, nump):
         for thread in r.html.find("dl"):
 
             author = ''
-            #if thread.find('.icon dt a'):
-            #    author = thread.find('.icon dt a')[1].text
+            if thread.find('.icon dt a')[3] is not None:
+                author = thread.find('.icon dt a')[3].text
 
             if thread.find(".topictitle"):
 

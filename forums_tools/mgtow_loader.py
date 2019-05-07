@@ -39,7 +39,7 @@ args = parser.parse_args()
 os.makedirs(args.dst, exist_ok=True)
 
 if args.build_topics_index:
-    build_topics_index(None, args.index, args.nump)
+    build_topics_index(None, args.index_topics, args.nump)
 
 elif args.build_index:
     topics_list = list(pd.read_csv(args.index_topics)["link"].values)
