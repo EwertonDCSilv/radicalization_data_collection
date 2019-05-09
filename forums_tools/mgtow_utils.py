@@ -1,5 +1,5 @@
-#from forums_tools.utils import get_html_session
-#from forums_tools.dateutil.relativedelta import relativedelta
+# from forums_tools.utils import get_html_session
+# from forums_tools.dateutil.relativedelta import relativedelta
 from utils import get_html_session
 from dateutil.relativedelta import relativedelta
 from bs4 import BeautifulSoup
@@ -93,17 +93,23 @@ def get_thread(link, session=None):
     session = get_html_session(session)
     number_of_pages_post = get_num_pages_post(link, session)
     df_list = []
-
-    print("Blaaa:{}".format(number_of_pages_post))
-
+    
     for thread_page in range(1, number_of_pages_post + 1, 1):
-        for idx, post in enumerate(get_posts_page(link, thread_page, session)):
+
+        post_elemenets = get_posts_page(link, thread_page, session)
+        N = len(post_elemenets[0])
+
+        for i in range(N):
             try:
-                post_dict = get_post(post, link, session)
+                element = []
+                element.append(post_elemenets[0][i])
+                element.append(post_elemenets[1][i])
+
+                post_dict = get_post(element, link, session)
                 df_list.append(post_dict)
             except Exception as ex:
                 traceback.print_exc()
-                print("problem with post", idx, ":", link)
+                print("problem with post", i, ":", link)
 
     df = pd.DataFrame(df_list)
     df.to_csv("./data/forums/mgtow/posts/" +
@@ -123,15 +129,21 @@ def get_num_pages_post(link, session=None):
 
 def get_posts_page(link, thread_page, session=None):
     session = get_html_session(session)
-    r_post = session.get(INCELS_THREAD_BASE + link +"page/" + str(thread_page))
-    print(INCELS_THREAD_BASE + link +"page/" + str(thread_page))
-    return r_post.html.find('.hentry')
+    r_post = session.get(INCELS_THREAD_BASE + link +
+                         "page/" + str(thread_page))
+    print(INCELS_THREAD_BASE + link + "page/" + str(thread_page))
+
+    post_elemenet = []
+    post_elemenet.append(r_post.html.find('.hentry'))
+    post_elemenet.append(r_post.html.find('.bbp-reply-header'))
+
+    return post_elemenet
 
 
 def get_post(post, link, session=None):
     # number_blockquotes = post.find(
     #    '.message-content')[0].html.count("</blockquote>")
-    #bs_text = BeautifulSoup(post.find('.message-content')[0].html, "lxml")
+    # bs_text = BeautifulSoup(post.find('.message-content')[0].html, "lxml")
     #
     # for i in range(number_blockquotes):
     #    try:
@@ -139,28 +151,27 @@ def get_post(post, link, session=None):
     #    except AttributeError:
     #        pass
 
-    if post.find(".bbp-reply-post-date"):
-        date_post = post.find(".bbp-reply-post-date")[0].text.replace("\n", "")
+    if post[1].find(".bbp-reply-post-date"):
+        date_post = post[1].find(
+            ".bbp-reply-post-date")[0].text.replace("\n", "")
     else:
         date_post = None
 
-    if post.find(".bbp-reply-author a"):
-        author = post.find(".bbp-reply-author a")[0].text
+    if post[0].find(".bbp-reply-author a"):
+        author = post[0].find(".bbp-reply-author a")[0].text.replace("\n", "")
     else:
         author = None
 
-    if post.find(".bbp-reply-content"):
-
-        content_text = post.find(
+    if post[0].find(".bbp-reply-content"):
+        content_text = post[0].find(
             ".bbp-reply-content")[0].text.replace("\n", ""),
-        content_html = post.find(
+        content_html = post[0].find(
             ".bbp-reply-content")[0].html.replace("\n", ""),
     else:
         content_text = None
         content_html = None
 
     post_dict = {
-
         "author": author,
         "resume_author": None,
         "joined_author": None,

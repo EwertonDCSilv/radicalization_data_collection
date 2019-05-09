@@ -44,8 +44,8 @@ def build_index(link, dst, nump):
         for thread in r.html.find("dl"):
 
             author = ''
-            if thread.find('.icon dt a')[3] is not None:
-                author = thread.find('.icon dt a')[3].text
+            if thread.find('dt a'):
+                author = thread.find('dt a')[1].text
 
             if thread.find(".topictitle"):
 
@@ -60,6 +60,8 @@ def build_index(link, dst, nump):
                 }
 
                 df_list.append(thread_dict)
+
+    subforum = subforum.replace(" ","_")
 
     df = pd.DataFrame(df_list)
     df.to_csv(dst.replace(".csv", "")+"_"+subforum+".csv")
