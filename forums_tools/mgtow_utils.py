@@ -93,7 +93,7 @@ def get_thread(link, session=None):
     session = get_html_session(session)
     number_of_pages_post = get_num_pages_post(link, session)
     df_list = []
-    
+
     for thread_page in range(1, number_of_pages_post + 1, 1):
 
         post_elemenets = get_posts_page(link, thread_page, session)
@@ -141,15 +141,6 @@ def get_posts_page(link, thread_page, session=None):
 
 
 def get_post(post, link, session=None):
-    # number_blockquotes = post.find(
-    #    '.message-content')[0].html.count("</blockquote>")
-    # bs_text = BeautifulSoup(post.find('.message-content')[0].html, "lxml")
-    #
-    # for i in range(number_blockquotes):
-    #    try:
-    #        bs_text.blockquote.decompose()
-    #    except AttributeError:
-    #        pass
 
     if post[1].find(".bbp-reply-post-date"):
         date_post = post[1].find(
@@ -161,6 +152,39 @@ def get_post(post, link, session=None):
         author = post[0].find(".bbp-reply-author a")[0].text.replace("\n", "")
     else:
         author = None
+
+    if post[1].attrs["id"]:
+        aux_str = str(post[1].attrs["id"])
+        aux_str = aux_str.split("-")
+        id_post = int(aux_str[-1])
+    else:
+        id_post = None
+
+    if post[0].find(".bbp-reply-content blockquote"):
+        blockquoteList = post[0].find(".bbp-reply-content blockquote")
+        id_post_interaction = []
+
+        for blockquot in blockquoteList:
+            if blockquot.find(".d4p-bbt-quote-title a"):
+                str_aux = str(blockquot.find(
+                    ".d4p-bbt-quote-title a")[0].links)
+                str_aux = str_aux.split("-")
+                id_post_aux = str_aux[-1].split("'")
+                id_post_interaction.append(id_post_aux[0])
+
+        number_blockquotes = post[0].find(
+            '.bbp-reply-content')[0].html.count("</blockquote>")
+        bs_text = BeautifulSoup(
+             post[0].find('.bbp-reply-content')[0].html, "lxml")
+
+        for i in range(number_blockquotes):
+            try:
+                bs_text.blockquote.decompose()
+            except AttributeError:
+                pass
+
+    else:
+        id_post_interaction = None
 
     if post[0].find(".bbp-reply-content"):
         content_text = post[0].find(
@@ -179,13 +203,14 @@ def get_post(post, link, session=None):
         "text_post": content_text,
         "html_post": content_html,
         "number_post": None,
-        # "id_post": post.find(""),
-        # "id_post_interaction": post.find(""),
+        "id_post": id_post,
+        "id_post_interaction": id_post_interaction,
         "date_post": date_post,
         "links": re.findall(LINKS_REGEX, str(content_html)),
         "thread": link,
     }
 
+    print(post_dict)
     return post_dict
 
 
