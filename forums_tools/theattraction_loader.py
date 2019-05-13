@@ -1,4 +1,4 @@
-from pick_up_artist_utils import build_index, get_thread, build_topics_index
+from theattraction_utils import build_index, get_thread, build_topics_index
 from utils import get_thread_global, initialize_worker, get_html_session
 from multiprocessing import Pool
 import pandas as pd
@@ -6,17 +6,16 @@ import argparse
 import os
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser(
-        description="""This script downloads the pick up artist is forum""")
+        description="""This script downloads the theattraction is forum""")
 
-    parser.add_argument("--dst", dest="dst", type=str, default="./data/forums/pick_up_artist/",
+    parser.add_argument("--dst", dest="dst", type=str, default="./data/forums/theattraction/",
                         help="Location to save the forum.")
 
-    parser.add_argument("--index", dest="index", type=str, default="./data/forums/pick_up_artist/index.csv",
+    parser.add_argument("--index", dest="index", type=str, default="./data/forums/theattraction/index.csv",
                         help="Location of index file.")
 
-    parser.add_argument("--index_topics", dest="index_topics", type=str, default="./data/forums/pick_up_artist/index_topics.csv",
+    parser.add_argument("--index_topics", dest="index_topics", type=str, default="./data/forums/theattraction/index_topics.csv",
                         help="Location of index file.")
 
     parser.add_argument("--build_index", dest="build_index", action="store_true",
@@ -39,7 +38,7 @@ if __name__ == "__main__":
     os.makedirs(args.dst, exist_ok=True)
 
     if args.build_topics_index:
-        build_topics_index(None, args.index, args.nump)
+        build_topics_index(None, args.index_topics, args.nump)
 
     elif args.build_index:
         topics_list = list(pd.read_csv(args.index_topics)["link"].values)

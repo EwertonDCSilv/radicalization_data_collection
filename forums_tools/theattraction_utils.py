@@ -1,5 +1,3 @@
-#from forums_tools.utils import get_html_session
-#from forums_tools.dateutil.relativedelta import relativedelta
 from utils import get_html_session
 from dateutil.relativedelta import relativedelta
 from bs4 import BeautifulSoup
@@ -16,44 +14,56 @@ month_list = {"Jan": 1, "Feb": 2, "Mar": 3, "Apr": 4, "May": 5, "Jun": 6, "Jul":
 
 LINKS_REGEX = r'(http|ftp|https)://([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?'
 
-INCELS_URL = "https://www.pick-up-artist-forum.com"
-
-INCELS_THREAD_BASE = "https://www.pick-up-artist-forum.com"
+INCELS_URL = "https://www.theattractionforums.com/"
+INCELS_THREAD_BASE = "https://www.theattractionforums.com/"
 
 
 def build_index(link, dst, nump):
     session = get_html_session()
 
     # Gets the first page
-    r = session.get(INCELS_THREAD_BASE + link+"page/" + str(1))
+    r = session.get(INCELS_THREAD_BASE + link+"&page")
 
     # Find number of pages
-    number_of_pages = int(r.html.find(".bbp-pagination a")
-                          [1].text.replace(",", ""))
+    number_of_pages = 1
+    
+    if r.html.find(".first_last a"):
+        url_end_page = str(r.html.find(".first_last a")[0].links)
+        list_aux = url_end_page.split("&")
+        number_of_pages = int(list_aux[1].replace("page=",""))
 
     # Get a name of subforum
-    subforum = r.html.find(".bbp-breadcrumb-current")[0].text
+    subforum = r.html.find(".forumtitle")[0].text
 
     df_list = []
 
     for page_num in range(1, number_of_pages + 1, 1):
         print("Forum: {0} - Page {1}/{2}".format(subforum,
                                                  page_num, number_of_pages))
-        r = session.get(INCELS_THREAD_BASE + link+"page/" + str(page_num))
+        r = session.get(INCELS_THREAD_BASE + link+"&page=" + str(page_num))
 
-        for thread in r.html.find(".bbp-topics"):
+        print((INCELS_THREAD_BASE + link+"&page=" + str(page_num)))
 
+        for thread in r.html.find("#thread_inlinemod_form .threadbit "):
+
+            
             thread_dict = {
                 "type": None,
-                "title": thread.find('.type-topic .bbp-topic-permalink')[0].text,
-                "link": list(thread.find('.type-topic .bbp-topic-permalink')[1].links)[0],
-                "author_topic": thread.find('.type-topic .bbp-author-name')[0].text,
-                "replies": thread.find('.type-topic .bbp-topic-reply-count')[0].text,
-                "views":  thread.find('.type-topic .bbp-topic-voice-count')[0].text,
+                "title": thread.find('.title')[0].text,
+                "link": list(thread.find('.title')[1].links)[0],
+                "author_topic": thread.find('.author')[0].text,
+                "replies": thread.find('.threadstats li')[0].text,
+                "views":  thread.find('.threadstats li')[1].text,
                 "subforum": subforum
             }
+           
+            print(thread_dict)
 
             df_list.append(thread_dict)
+
+    subforum = subforum.replace("?","-")
+    subforum = subforum.replace("!","-")
+    subforum = subforum.replace(" ","_")
 
     df = pd.DataFrame(df_list)
     df.to_csv(dst.replace(".csv", "")+"_"+subforum+".csv")
@@ -68,14 +78,13 @@ def build_topics_index(src, dst, nump):
 
     df_list = []
 
-    for thread in r.html.find(".forumlink"):
+    for thread in r.html.find("#forums li ol .forumrow "):
 
         thread_dict = {
-            "link": list(thread.links)[0],
-            "subforum": thread.text,
+            "link": list(thread.find(".forumtitle a")[0].links)[0],
+            "subforum": thread.find('.forumtitle a')[0].text,
         }
 
-        print(thread_dict)
         df_list.append(thread_dict)
 
     df = pd.DataFrame(df_list)
@@ -152,7 +161,7 @@ def get_post(post, link, session=None):
         # "links": re.findall(LINKS_REGEX, str(bs_text.html)),
         # "thread": link
 
-    
+
         "author": post.find(".bbp-reply-author a") if has_author else post.find(".bbp-reply-author"),
         "resume_author": None,
         "joined_author": None,
@@ -162,7 +171,7 @@ def get_post(post, link, session=None):
         "number_post": None,  # Use a count,
         # "id_post": post.find(""),
         # "id_post_interaction": post.find(""),
-        #"date_post": post.find(".bbp-reply-post-date").text,
+        # "date_post": post.find(".bbp-reply-post-date").text,
         "links": re.findall(LINKS_REGEX, str(post.find(" .bbp-reply-content")[0].html)),
         "thread": link,
     }

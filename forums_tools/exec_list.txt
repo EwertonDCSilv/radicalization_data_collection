@@ -2,8 +2,8 @@ Tag   Code	Date    Post    FILE	LINK
 [OK]  [OK]	[OK]    [OK]    [OK]	https://incels.co/
 [OK]  [OK]	[NO]    [NO]    [OK]	https://www.mgtow.com/forums/
 [OK]  [NO]	[NO]    [OK]    [OK]	https://redpilltalk.com/
-[OK]  [NO]	[OK]    [OK]    [OK]	https://www.pick-up-artist-forum.com/
 [OK]  [NO]	[OK]    [OK]    [OK]	http://www.theattractionforums.com/
+[OK]  [NO]	[OK]    [OK]    [OK]	https://www.pick-up-artist-forum.com/
 [NO]  [NO]	[OK]    [OK]    [OK]	https://www.rooshvforum.com/
 [NO]  [NO]	[NO]    [NO]    [NO]	https://d2ec906f9aea-003845.vbulletin.net
 [NO]  [NO]	[OK]    [OK]    [OK]	http://love-shy.com/lsbb/
