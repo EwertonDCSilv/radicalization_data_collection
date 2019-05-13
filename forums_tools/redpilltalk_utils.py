@@ -44,9 +44,9 @@ def build_index(link, dst, nump):
         for thread in r.html.find("dl"):
 
             author = ''
-            if thread.find('dt a'):
+            if len(thread.find('dt a')) >= 2:
                 author = thread.find('dt a')[1].text
-
+            
             if thread.find(".topictitle"):
 
                 thread_dict = {
@@ -155,12 +155,12 @@ def get_post(post, link, session=None):
         autor = None
 
     if post.find('dl dd'):
-        joined_author = post.find('dl dd')[0].text.replace("\n", " "),
+        joined_author = int(post.find('dl dd')[0].text.replace("\n", " ")),
     else:
         joined_author = None
 
     if post.find('dl dd'):
-        messages_author = post.find('dl dd')[1].text.replace("\n", " "),
+        messages_author = str(post.find('dl dd')[1].text.replace("\n", " ")),
     else:
         messages_author = None
 
@@ -182,16 +182,17 @@ def get_post(post, link, session=None):
         "resume_author": None,
         "joined_author": joined_author,
         "messages_author": messages_author,
-        "text_post": content_text,
-        "html_post": content_html,
+        "text_post": str(content_text),
+        "html_post": str(content_html),
         "number_post": None,  # Use a count,
         "id_post": None,
-        "id_post_interaction": None,
+        "id_post_interaction": post.attrs["class"],
         "date_post": date_post,
         "links": re.findall(LINKS_REGEX, str(content_html)),
         "thread": link,
     }
 
+    print(post_dict)
     return post_dict
 
 

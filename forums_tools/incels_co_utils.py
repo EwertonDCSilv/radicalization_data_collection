@@ -1,4 +1,4 @@
-from forums_tools.utils import get_html_session
+from utils import get_html_session
 from dateutil.relativedelta import relativedelta
 from bs4 import BeautifulSoup
 from datetime import datetime
@@ -75,14 +75,16 @@ def get_thread(link, session=None):
                 print("problem with post", idx, ":", link)
 
     df = pd.DataFrame(df_list)
-    df.to_csv("./data/forums/incels/posts/" + re.sub("/", "", link[9:]) + ".csv", index=False)
+    df.to_csv("./data/forums/incels/posts/" +
+              re.sub("/", "", link[9:]) + ".csv", index=False)
 
 
 def get_num_pages_post(link, session=None):
     session = get_html_session(session)
     r_post = session.get(INCELS_THREAD_BASE + link)
     try:
-        number_of_pages_post = int([v.text for v in r_post.html.find(".pageNav-page")][-1])
+        number_of_pages_post = int(
+            [v.text for v in r_post.html.find(".pageNav-page")][-1])
     except IndexError:
         number_of_pages_post = 1
     return number_of_pages_post
@@ -90,12 +92,14 @@ def get_num_pages_post(link, session=None):
 
 def get_posts_page(link, thread_page, session=None):
     session = get_html_session(session)
-    r_post = session.get(INCELS_THREAD_BASE + link + "page-" + str(thread_page))
+    r_post = session.get(INCELS_THREAD_BASE + link +
+                         "page-" + str(thread_page))
     return r_post.html.find('.message--post')
 
 
 def get_post(post, link, session=None):
-    number_blockquotes = post.find('.message-content')[0].html.count("</blockquote>")
+    number_blockquotes = post.find(
+        '.message-content')[0].html.count("</blockquote>")
     bs_text = BeautifulSoup(post.find('.message-content')[0].html, "lxml")
     for i in range(number_blockquotes):
         try:
@@ -124,7 +128,8 @@ def get_post(post, link, session=None):
 def handle_date(date_post):
     date_post = date_post.replace(",", "")
     week_day = date_post.split()
-    current_date = datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
+    current_date = datetime.today().replace(
+        hour=0, minute=0, second=0, microsecond=0)
     real_date = datetime.today()
 
     if week_day[0] in week_day_list:
@@ -133,9 +138,11 @@ def handle_date(date_post):
         if week_day_list[week_day[0]] != -1:
 
             if week_day_list[week_day[0]] > current_date.today().weekday():
-                number_day = (7 - week_day_list[week_day[0]]) + current_date.today().weekday()
+                number_day = (
+                    7 - week_day_list[week_day[0]]) + current_date.today().weekday()
             elif week_day_list[week_day[0]] < current_date.today().weekday():
-                number_day = current_date.today().weekday() - week_day_list[week_day[0]]
+                number_day = current_date.today().weekday() - \
+                    week_day_list[week_day[0]]
 
             real_date = current_date - relativedelta(days=number_day)
 
@@ -149,10 +156,12 @@ def handle_date(date_post):
 
         if 'am' in date_post or "12:" in date_post:
             week_day_hour = week_day[2].split(':')
-            real_date = real_date.replace(hour=int(week_day_hour[0]), minute=int(week_day_hour[1]))
+            real_date = real_date.replace(
+                hour=int(week_day_hour[0]), minute=int(week_day_hour[1]))
         else:
             week_day_hour = week_day[2].split(':')
-            real_date = real_date.replace(hour=int(week_day_hour[0]) + 12, minute=int(week_day_hour[1]))
+            real_date = real_date.replace(
+                hour=int(week_day_hour[0]) + 12, minute=int(week_day_hour[1]))
 
     # handles date: case (3) older post
     else:

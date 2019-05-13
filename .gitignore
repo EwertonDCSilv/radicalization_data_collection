@@ -7,3 +7,5 @@ data/Stormfront
 /data/*
 /.vscode/*
 data/youtube/api_key.json
+*no-*_loader.py
+*no-*_utils.py

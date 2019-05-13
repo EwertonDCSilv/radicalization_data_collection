@@ -175,7 +175,7 @@ def get_post(post, link, session=None):
         number_blockquotes = post[0].find(
             '.bbp-reply-content')[0].html.count("</blockquote>")
         bs_text = BeautifulSoup(
-             post[0].find('.bbp-reply-content')[0].html, "lxml")
+            post[0].find('.bbp-reply-content')[0].html, "lxml")
 
         for i in range(number_blockquotes):
             try:
@@ -205,56 +205,30 @@ def get_post(post, link, session=None):
         "number_post": None,
         "id_post": id_post,
         "id_post_interaction": id_post_interaction,
-        "date_post": date_post,
+        "date_post": handle_date(date_post),
         "links": re.findall(LINKS_REGEX, str(content_html)),
         "thread": link,
     }
 
-    print(post_dict)
+    # print(post_dict)
     return post_dict
 
 
 def handle_date(date_post):
-    date_post = date_post.replace(",", "")
-    week_day = date_post.split()
-    current_date = datetime.today().replace(
-        hour=0, minute=0, second=0, microsecond=0)
+    date_post = date_post.replace(" at ", "-")
+    date_post = date_post.replace(":", "-")
+    date_post = date_post.replace("AM", "")
+    date_post = date_post.replace("PM", "")
+    week_day = date_post.split("-")
     real_date = datetime.today()
 
-    if week_day[0] in week_day_list:
+    if week_day[0]:
 
-        # handles date: case (1) day of this week / last week
-        if week_day_list[week_day[0]] != -1:
-
-            if week_day_list[week_day[0]] > current_date.today().weekday():
-                number_day = (
-                    7 - week_day_list[week_day[0]]) + current_date.today().weekday()
-            elif week_day_list[week_day[0]] < current_date.today().weekday():
-                number_day = current_date.today().weekday() - \
-                    week_day_list[week_day[0]]
-
-            real_date = current_date - relativedelta(days=number_day)
-
-        # handles date: case (2) yesterday  /today
+        if int(week_day[3]) > 12:
+            real_date.replace(year=int(week_day[0]), month=int(week_day[1]), day=int(week_day[2]),
+                              hour=int(week_day[3]+12), minute=int(week_day[4]), second=0, microsecond=0)
         else:
-            if "Yesterday" in week_day[0]:
-                real_date = current_date - relativedelta(days=1)
-
-            elif "Today" in week_day[0]:
-                real_date = current_date - relativedelta(days=0)
-
-        if 'am' in date_post or "12:" in date_post:
-            week_day_hour = week_day[2].split(':')
-            real_date = real_date.replace(
-                hour=int(week_day_hour[0]), minute=int(week_day_hour[1]))
-        else:
-            week_day_hour = week_day[2].split(':')
-            real_date = real_date.replace(
-                hour=int(week_day_hour[0]) + 12, minute=int(week_day_hour[1]))
-
-    # handles date: case (3) older post
-    else:
-        real_date = real_date.replace(day=int(week_day[1]), month=int(month_list[week_day[0]]),
-                                      year=int(week_day[2]), hour=0, minute=0, second=0, microsecond=0)
-
+            real_date.replace(year=int(week_day[0]), month=int(week_day[1]), day=int(week_day[2]),
+                              hour=int(week_day[3]), minute=int(week_day[4]), second=0, microsecond=0)
+    
     return real_date
