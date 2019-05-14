@@ -158,7 +158,7 @@ def get_post(post, link, session=None):
         date_post = None
 
     if post[0].find(".bbp-reply-author"):
-        author = str(post[0].find(".bbp-reply-author")[0].text)
+        author = str(post[0].find(".bbp-reply-author")[0].text.replace("\n", ""))
     else:
         author = None
 
