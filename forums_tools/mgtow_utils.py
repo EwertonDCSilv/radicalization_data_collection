@@ -17,7 +17,6 @@ month_list = {"Jan": 1, "Feb": 2, "Mar": 3, "Apr": 4, "May": 5, "Jun": 6, "Jul":
 LINKS_REGEX = r'(http|ftp|https)://([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?'
 
 INCELS_URL = "https://www.mgtow.com/forums"
-
 INCELS_THREAD_BASE = "https://www.mgtow.com/"
 
 
@@ -36,6 +35,7 @@ def build_index(link, dst, nump):
 
     df_list = []
 
+    # Get data index
     for page_num in range(1, number_of_pages + 1, 1):
         print("Forum: {0} - Page {1}/{2}".format(subforum,
                                                  page_num, number_of_pages))
@@ -60,8 +60,8 @@ def build_index(link, dst, nump):
 
             df_list.append(thread_dict)
 
+    # Export data index
     subforum = subforum.replace(" ", "_")
-
     df = pd.DataFrame(df_list)
     df.to_csv(dst.replace(".csv", "")+"_"+subforum+".csv")
 
@@ -75,6 +75,7 @@ def build_topics_index(src, dst, nump):
 
     df_list = []
 
+    # Processing data topics index
     for thread in r.html.find("#grid .element-item "):
 
         thread_dict = {
@@ -84,6 +85,7 @@ def build_topics_index(src, dst, nump):
 
         df_list.append(thread_dict)
 
+    # Export data topics index
     df = pd.DataFrame(df_list)
     df.to_csv(dst)
 
@@ -94,6 +96,7 @@ def get_thread(link, session=None):
     number_of_pages_post = get_num_pages_post(link, session)
     df_list = []
 
+    # Processing post pages
     for thread_page in range(1, number_of_pages_post + 1, 1):
 
         post_elemenets = get_posts_page(link, thread_page, session)
@@ -106,11 +109,14 @@ def get_thread(link, session=None):
                 element.append(post_elemenets[1][i])
 
                 post_dict = get_post(element, link, session)
+                post_dict['number_post'] = i + 1
+
                 df_list.append(post_dict)
-            except Exception as ex:
+            except Exception:
                 traceback.print_exc()
                 print("problem with post", i, ":", link)
 
+    # Export data posts
     df = pd.DataFrame(df_list)
     df.to_csv("./data/forums/mgtow/posts/" +
               re.sub("/", "", link[9:].replace(" ", "_")) + ".csv", index=False)
@@ -119,6 +125,8 @@ def get_thread(link, session=None):
 def get_num_pages_post(link, session=None):
     session = get_html_session(session)
     r_post = session.get(INCELS_THREAD_BASE + link)
+
+    # Get number pages for post
     try:
         number_of_pages_post = int(r_post.html.find(
             ".bbp-pagination-links a")[-2].text)
@@ -131,8 +139,8 @@ def get_posts_page(link, thread_page, session=None):
     session = get_html_session(session)
     r_post = session.get(INCELS_THREAD_BASE + link +
                          "page/" + str(thread_page))
-    print(INCELS_THREAD_BASE + link + "page/" + str(thread_page))
 
+    # Get list elements post
     post_elemenet = []
     post_elemenet.append(r_post.html.find('.hentry'))
     post_elemenet.append(r_post.html.find('.bbp-reply-header'))
@@ -142,14 +150,15 @@ def get_posts_page(link, thread_page, session=None):
 
 def get_post(post, link, session=None):
 
+    # Verify existence of sub-elements
     if post[1].find(".bbp-reply-post-date"):
         date_post = post[1].find(
             ".bbp-reply-post-date")[0].text.replace("\n", "")
     else:
         date_post = None
 
-    if post[0].find(".bbp-reply-author a"):
-        author = post[0].find(".bbp-reply-author a")[0].text.replace("\n", "")
+    if post[0].find(".bbp-reply-author"):
+        author = str(post[0].find(".bbp-reply-author")[0].text)
     else:
         author = None
 
@@ -164,6 +173,7 @@ def get_post(post, link, session=None):
         blockquoteList = post[0].find(".bbp-reply-content blockquote")
         id_post_interaction = []
 
+        # Processing id interactions of post
         for blockquot in blockquoteList:
             if blockquot.find(".d4p-bbt-quote-title a"):
                 str_aux = str(blockquot.find(
@@ -187,14 +197,15 @@ def get_post(post, link, session=None):
         id_post_interaction = None
 
     if post[0].find(".bbp-reply-content"):
-        content_text = post[0].find(
-            ".bbp-reply-content")[0].text.replace("\n", ""),
-        content_html = post[0].find(
-            ".bbp-reply-content")[0].html.replace("\n", ""),
+        content_text = str(post[0].find(
+            ".bbp-reply-content")[0].text.replace("\n", "")),
+        content_html = str(post[0].find(
+            ".bbp-reply-content")[0].html.replace("\n", "")),
     else:
         content_text = None
         content_html = None
 
+    # Data of post
     post_dict = {
         "author": author,
         "resume_author": None,
@@ -210,7 +221,6 @@ def get_post(post, link, session=None):
         "thread": link,
     }
 
-    # print(post_dict)
     return post_dict
 
 
@@ -222,6 +232,7 @@ def handle_date(date_post):
     week_day = date_post.split("-")
     real_date = datetime.today()
 
+    # Converter date-time
     if week_day[0]:
 
         if int(week_day[3]) > 12:
@@ -230,5 +241,5 @@ def handle_date(date_post):
         else:
             real_date.replace(year=int(week_day[0]), month=int(week_day[1]), day=int(week_day[2]),
                               hour=int(week_day[3]), minute=int(week_day[4]), second=0, microsecond=0)
-    
+
     return real_date

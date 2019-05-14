@@ -15,7 +15,6 @@ month_list = {"Jan": 1, "Feb": 2, "Mar": 3, "Apr": 4, "May": 5, "Jun": 6, "Jul":
 LINKS_REGEX = r'(http|ftp|https)://([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?'
 
 INCELS_URL = "https://incels.co/forums/inceldom-discussion.2/page-"
-
 INCELS_THREAD_BASE = "https://incels.co"
 
 
@@ -30,6 +29,7 @@ def build_index(src, dst, nump):
 
     df_list = []
 
+    # Process index pages
     for page_num in range(1, number_of_pages + 1, 1):
         print("Page {0}/{1}".format(page_num, number_of_pages))
         r = session.get(INCELS_URL + str(page_num))
@@ -55,8 +55,8 @@ def build_index(src, dst, nump):
 
             df_list.append(thread_dict)
 
+    # Export data index
     df = pd.DataFrame(df_list)
-
     df.to_csv(dst)
 
 
@@ -65,15 +65,17 @@ def get_thread(link, session=None):
     number_of_pages_post = get_num_pages_post(link, session)
     df_list = []
 
+    # Process post pages
     for thread_page in range(1, number_of_pages_post + 1, 1):
         for idx, post in enumerate(get_posts_page(link, thread_page, session)):
             try:
                 post_dict = get_post(post, link, session)
                 df_list.append(post_dict)
-            except Exception as ex:
+            except Exception:
                 traceback.print_exc()
                 print("problem with post", idx, ":", link)
 
+    # Export data post
     df = pd.DataFrame(df_list)
     df.to_csv("./data/forums/incels/posts/" +
               re.sub("/", "", link[9:]) + ".csv", index=False)
@@ -82,6 +84,8 @@ def get_thread(link, session=None):
 def get_num_pages_post(link, session=None):
     session = get_html_session(session)
     r_post = session.get(INCELS_THREAD_BASE + link)
+
+    # Get number pages for post
     try:
         number_of_pages_post = int(
             [v.text for v in r_post.html.find(".pageNav-page")][-1])
@@ -94,31 +98,35 @@ def get_posts_page(link, thread_page, session=None):
     session = get_html_session(session)
     r_post = session.get(INCELS_THREAD_BASE + link +
                          "page-" + str(thread_page))
+    # Get element of post
     return r_post.html.find('.message--post')
 
 
 def get_post(post, link, session=None):
+    # Remove blockquote of interactions
     number_blockquotes = post.find(
         '.message-content')[0].html.count("</blockquote>")
     bs_text = BeautifulSoup(post.find('.message-content')[0].html, "lxml")
+
     for i in range(number_blockquotes):
         try:
             bs_text.blockquote.decompose()
         except AttributeError:
             pass
 
+    # Data of post
     post_dict = {
-        "author": post.find('.username', first=True).text,
-        "resume_author": post.find('.message-userTitle', first=True).text,
-        "joined_author": post.find('.message-userExtras dd', first=True).text,
+        "author": post.find('.username', first=True).text.replace("\n",""),
+        "resume_author": post.find('.message-userTitle', first=True).text.replace("\n",""),
+        "joined_author": post.find('.message-userExtras dd', first=True).text.replace("\n",""),
         "messages_author": int(re.sub(",", "", post.find('.message-userExtras dd')[1].text)),
-        "text_post": re.sub("[\n|\xa0]+", " ", bs_text.text),
-        "html_post": post.find('.message-content')[0].html,
-        "number_post": post.find('.message-attribution-opposite a')[1].text,
+        "text_post": re.sub("[\n|\xa0]+", " ", bs_text.text).replace("\n",""),
+        "html_post": post.find('.message-content')[0].html.replace("\n",""),
+        "number_post": post.find('.message-attribution-opposite a')[1].text.replace("\n",""),
         "id_post": re.sub("js-post-", "", post.attrs["id"]),
         "id_post_interaction": [re.sub(r'/goto/post\?id=', "", list(v.links)[0])
                                 for v in post.find(".bbCodeBlock-title")],
-        "date_post": post.find('.u-concealed')[0].text,
+        "date_post": handle_date(post.find('.u-concealed')[0].text),
         "links": re.findall(LINKS_REGEX, str(bs_text.html)),
         "thread": link
     }

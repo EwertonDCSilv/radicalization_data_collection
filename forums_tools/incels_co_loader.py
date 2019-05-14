@@ -33,8 +33,11 @@ if __name__ == "__main__":
 
     os.makedirs(args.dst, exist_ok=True)
 
+    # Build index 
     if args.build_index:
         build_index(None, args.index, args.nump)
+    
+    # Get data posts
     else:
         to_run = list(pd.read_csv(args.index)["link"].values)
         to_run = list(zip([get_thread]*len(to_run), to_run))
