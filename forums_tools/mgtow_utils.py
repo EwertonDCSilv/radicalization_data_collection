@@ -121,31 +121,31 @@ def get_thread(link, session=None):
         count_page = count_page + 1
 
     # Export data posts
-    df=pd.DataFrame(df_list)
+    df = pd.DataFrame(df_list)
     df.to_csv("./data/forums/mgtow/posts/" +
               re.sub("/", "", link[9:].replace(" ", "_")) + ".csv", index=False)
 
 
 def get_num_pages_post(link, session=None):
-    session=get_html_session(session)
-    r_post=session.get(INCELS_THREAD_BASE + link)
+    session = get_html_session(session)
+    r_post = session.get(INCELS_THREAD_BASE + link)
 
     # Get number pages for post
     try:
-        number_of_pages_post=int(r_post.html.find(
+        number_of_pages_post = int(r_post.html.find(
             ".bbp-pagination-links a")[-2].text)
     except IndexError:
-        number_of_pages_post=1
+        number_of_pages_post = 1
     return number_of_pages_post
 
 
 def get_posts_page(link, thread_page, session=None):
-    session=get_html_session(session)
-    r_post=session.get(INCELS_THREAD_BASE + link +
+    session = get_html_session(session)
+    r_post = session.get(INCELS_THREAD_BASE + link +
                          "page/" + str(thread_page))
 
     # Get list elements post
-    post_elemenet=[]
+    post_elemenet = []
     post_elemenet.append(r_post.html.find('.hentry'))
     post_elemenet.append(r_post.html.find('.bbp-reply-header'))
 
@@ -156,61 +156,67 @@ def get_post(post, link, session=None):
 
     # Verify existence of sub-elements
     if post[1].find(".bbp-reply-post-date"):
-        date_post=post[1].find(
+        date_post = post[1].find(
             ".bbp-reply-post-date")[0].text.replace("\n", "")
     else:
-        date_post=None
+        date_post = None
 
     if post[0].find(".bbp-reply-author"):
-        author=str(post[0].find(".bbp-reply-author")[0].text.replace("\n", ""))
+        author = str(post[0].find(".bbp-reply-author")
+                     [0].text.replace("\n", ""))
     else:
-        author=None
+        author = None
 
     if post[1].attrs["id"]:
-        aux_str=str(post[1].attrs["id"])
-        aux_str=aux_str.split("-")
-        id_post=int(aux_str[-1])
+        aux_str = str(post[1].attrs["id"])
+        aux_str = aux_str.split("-")
+        id_post = int(aux_str[-1])
     else:
-        id_post=None
-
-    if post[0].find(".bbp-reply-content blockquote"):
-        blockquoteList=post[0].find(".bbp-reply-content blockquote")
-        id_post_interaction=[]
-
-        # Processing id interactions of post
-        for blockquot in blockquoteList:
-            if blockquot.find(".d4p-bbt-quote-title a"):
-                str_aux=str(blockquot.find(
-                    ".d4p-bbt-quote-title a")[0].links)
-                str_aux=str_aux.split("-")
-                id_post_aux=str_aux[-1].split("'")
-                id_post_interaction.append(id_post_aux[0])
-
-        number_blockquotes=post[0].find(
-            '.bbp-reply-content')[0].html.count("</blockquote>")
-        bs_text=BeautifulSoup(
-            post[0].find('.bbp-reply-content')[0].html, "lxml")
-
-        for i in range(number_blockquotes):
-            try:
-                bs_text.blockquote.decompose()
-            except AttributeError:
-                pass
-
-    else:
-        id_post_interaction=None
+        id_post = None
 
     if post[0].find(".bbp-reply-content"):
-        content_text=str(post[0].find(
-            ".bbp-reply-content")[0].text.replace("\n", "")),
-        content_html=str(post[0].find(
-            ".bbp-reply-content")[0].html.replace("\n", "")),
+
+        # Verify interactions inter posts
+        if post[0].find(".bbp-reply-content blockquote"):
+            blockquoteList = post[0].find(".bbp-reply-content blockquote")
+            id_post_interaction = []
+
+            # Processing id interactions of post
+            for blockquot in blockquoteList:
+                if blockquot.find(".d4p-bbt-quote-title a"):
+                    str_aux = str(blockquot.find(
+                        ".d4p-bbt-quote-title a")[0].links)
+                    str_aux = str_aux.split("-")
+                    id_post_aux = str_aux[-1].split("'")
+                    id_post_interaction.append(id_post_aux[0])
+
+            number_blockquotes = post[0].find(
+                '.bbp-reply-content')[0].html.count("</blockquote>")
+            bs_text = BeautifulSoup(
+                post[0].find('.bbp-reply-content')[0].html, "html.parser")
+
+            for i in range(number_blockquotes):
+                try:
+                    bs_text.blockquote.decompose()
+                except AttributeError:
+                    pass
+
+            content_html = bs_text
+            content_text = bs_text.get_text()
+
+        else:
+            content_text = str(post[0].find(
+                ".bbp-reply-content")[0].text.replace("\n", ""))
+            content_html = str(post[0].find(
+                ".bbp-reply-content")[0].html.replace("\n", ""))
+            id_post_interaction = None
     else:
-        content_text=None
-        content_html=None
+        content_text = None
+        content_html = None
+        id_post_interaction = None
 
     # Data of post
-    post_dict={
+    post_dict = {
         "author": author,
         "resume_author": None,
         "joined_author": None,
@@ -229,12 +235,12 @@ def get_post(post, link, session=None):
 
 
 def handle_date(date_post):
-    date_post=date_post.replace(" at ", "-")
-    date_post=date_post.replace(":", "-")
-    date_post=date_post.replace("AM", "")
-    date_post=date_post.replace("PM", "")
-    week_day=date_post.split("-")
-    real_date=datetime.today()
+    date_post = date_post.replace(" at ", "-")
+    date_post = date_post.replace(":", "-")
+    date_post = date_post.replace("AM", "")
+    date_post = date_post.replace("PM", "")
+    week_day = date_post.split("-")
+    real_date = datetime.today()
 
     # Converter date-time
     if week_day[0]:
