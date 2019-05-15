@@ -1,5 +1,3 @@
-# from forums_tools.utils import get_html_session
-# from forums_tools.dateutil.relativedelta import relativedelta
 from utils import get_html_session
 from dateutil.relativedelta import relativedelta
 from bs4 import BeautifulSoup
@@ -30,7 +28,7 @@ def build_index(link, dst, nump):
     number_of_pages = int(r.html.find(".bbp-pagination a")
                           [1].text.replace(",", ""))
 
-    # Get a name of subforum
+    # Get name of subforum
     subforum = r.html.find(".bbp-breadcrumb-current")[0].text
 
     df_list = []

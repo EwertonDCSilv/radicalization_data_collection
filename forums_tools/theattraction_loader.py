@@ -37,14 +37,17 @@ if __name__ == "__main__":
 
     os.makedirs(args.dst, exist_ok=True)
 
+    # Build index topics
     if args.build_topics_index:
         build_topics_index(None, args.index_topics, args.nump)
 
+    # Build index
     elif args.build_index:
         topics_list = list(pd.read_csv(args.index_topics)["link"].values)
         for link in topics_list:
             build_index(link, args.index, args.nump)
 
+    # Get data posts
     else:
         to_run = list(pd.read_csv(args.index)["link"].values)
         to_run = list(zip([get_thread]*len(to_run), to_run))

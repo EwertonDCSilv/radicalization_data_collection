@@ -26,17 +26,18 @@ def build_index(link, dst, nump):
 
     # Find number of pages
     number_of_pages = 1
-    
+
     if r.html.find(".first_last a"):
         url_end_page = str(r.html.find(".first_last a")[0].links)
         list_aux = url_end_page.split("&")
-        number_of_pages = int(list_aux[1].replace("page=",""))
+        number_of_pages = int(list_aux[1].replace("page=", ""))
 
-    # Get a name of subforum
+    # Get name of subforum
     subforum = r.html.find(".forumtitle")[0].text
 
     df_list = []
 
+    # Get data index
     for page_num in range(1, number_of_pages + 1, 1):
         print("Forum: {0} - Page {1}/{2}".format(subforum,
                                                  page_num, number_of_pages))
@@ -46,7 +47,6 @@ def build_index(link, dst, nump):
 
         for thread in r.html.find("#thread_inlinemod_form .threadbit "):
 
-            
             thread_dict = {
                 "type": None,
                 "title": thread.find('.title')[0].text,
@@ -56,14 +56,15 @@ def build_index(link, dst, nump):
                 "views":  thread.find('.threadstats li')[1].text,
                 "subforum": subforum
             }
-           
+
             print(thread_dict)
 
             df_list.append(thread_dict)
-
-    subforum = subforum.replace("?","-")
-    subforum = subforum.replace("!","-")
-    subforum = subforum.replace(" ","_")
+    
+    # Export data index
+    subforum = subforum.replace("?", "-")
+    subforum = subforum.replace("!", "-")
+    subforum = subforum.replace(" ", "_")
 
     df = pd.DataFrame(df_list)
     df.to_csv(dst.replace(".csv", "")+"_"+subforum+".csv")
@@ -78,6 +79,7 @@ def build_topics_index(src, dst, nump):
 
     df_list = []
 
+    # Processing data topics index
     for thread in r.html.find("#forums li ol .forumrow "):
 
         thread_dict = {
@@ -87,6 +89,7 @@ def build_topics_index(src, dst, nump):
 
         df_list.append(thread_dict)
 
+    # Export data topics index
     df = pd.DataFrame(df_list)
     df.to_csv(dst)
 
@@ -97,6 +100,7 @@ def get_thread(link, session=None):
     number_of_pages_post = get_num_pages_post(link, session)
     df_list = []
 
+    # Processing post pages
     for thread_page in range(1, number_of_pages_post + 1, 1):
         for idx, post in enumerate(get_posts_page(link, thread_page, session)):
             try:
@@ -108,6 +112,7 @@ def get_thread(link, session=None):
 
         exit()
 
+    # Export data posts
     df = pd.DataFrame(df_list)
     df.to_csv("./data/forums/mgtow/posts/" +
               re.sub("/", "", link[9:]) + ".csv", index=False)
@@ -117,6 +122,8 @@ def get_num_pages_post(link, session=None):
     session = get_html_session(session)
     r_post = session.get(
         "https://www.mgtow.com/forums/topic/back-again-advice-needed/")
+    
+    # Get number pages for post
     try:
         number_of_pages_post = int(r_post.html.find(
             ".bbp-pagination-links a")[-2].text)
@@ -127,22 +134,13 @@ def get_num_pages_post(link, session=None):
 
 def get_posts_page(link, thread_page, session=None):
     session = get_html_session(session)
-    #r_post = session.get(INCELS_THREAD_BASE + link +"page/" + str(thread_page))
-    r_post = session.get(
-        "https://www.mgtow.com/forums/topic/introduction-30/" + "page/" + str(thread_page))
+    r_post = session.get(INCELS_THREAD_BASE + link +"page/" + str(thread_page))
+    
+    # Get elements post
     return r_post.html.find('.topic')
 
 
 def get_post(post, link, session=None):
-    # number_blockquotes = post.find(
-    #    '.message-content')[0].html.count("</blockquote>")
-    #bs_text = BeautifulSoup(post.find('.message-content')[0].html, "lxml")
-    #
-    # for i in range(number_blockquotes):
-    #    try:
-    #        bs_text.blockquote.decompose()
-    #    except AttributeError:
-    #        pass
 
     has_author = post.find(".bbp-reply-author a") is not None
 

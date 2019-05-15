@@ -1,5 +1,3 @@
-#from forums_tools.mgtow_utils import build_index, get_thread, build_topics_index
-#from forums_tools.utils import get_thread_global, initialize_worker, get_html_session
 from mgtow_utils import build_index, get_thread, build_topics_index
 from utils import get_thread_global, initialize_worker, get_html_session
 from multiprocessing import Pool
