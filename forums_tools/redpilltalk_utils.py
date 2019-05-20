@@ -9,8 +9,8 @@ import re
 week_day_list = {"Monday": 0, "Tuesday": 1, "Wednesday": 2, "Thursday": 3, "Friday": 4, "Saturday": 5, "Sunday": 6,
                  "Yesterday": -1, "Today": -1}
 
-month_list = {"Jan": 1, "Feb": 2, "Mar": 3, "Apr": 4, "May": 5, "Jun": 6, "Jul": 7, "Aug": 8, "Sep": 9, "Oct": 10,
-              "Nov": 11, "Dec": 12, }
+month_list = {"January": 1, "February": 2, "March": 3, "April": 4, "May": 5, "June": 6, "July": 7, "August": 8, "September": 9, "October": 10,
+              "November": 11, "December": 12, }
 
 LINKS_REGEX = r'(http|ftp|https)://([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?'
 
@@ -107,15 +107,16 @@ def get_thread(link, session=None):
         for idx, post in enumerate(get_posts_page(link, thread_page, session)):
             try:
                 post_dict = get_post(post, link, session)
-                post_dict["number_post"] = count_post
-                
-                
 
-                df_list.append(post_dict)
+                if post_dict:
+                    post_dict["number_post"] = count_post
+
+                    df_list.append(post_dict)
+                    count_post = count_post + 1
+
             except Exception:
                 traceback.print_exc()
                 print("problem with post", idx, ":", link)
-            count_post = count_post + 1
 
     df = pd.DataFrame(df_list)
 
@@ -142,66 +143,75 @@ def get_num_pages_post(link, session=None):
 def get_posts_page(link, thread_page, session=None):
     session = get_html_session(session)
     r_post = session.get(link +
-                         "page/" + str((int(thread_page)-1)*30))
+                         "&start=" + str((int(thread_page)-1)*30))
+
     # Get elements post
-    return r_post.html.find('#page-body .post ')
+    return r_post.html.find('#page-body article')
 
 
 def get_post(post, link, session=None):
 
     if post.find(".post-author"):
-        autor = post.find(".post-author")[0].text.replace("\n", " ")
+        autor = str(post.find(".post-author")
+                         [0].text.replace("\n", " "))
     else:
         autor = None
 
     if post.find('dl dd'):
-        joined_author = int(post.find('dl dd')[0].text.replace("\n", " ")),
+        joined_author = str(
+            post.find('dl dd')[1].text.replace("\n", " ")),
     else:
         joined_author = None
 
     if post.find('dl dd'):
-        messages_author = str(post.find('dl dd')[1].text.replace("\n", " ")),
+        messages_author = str(
+            post.find('dl dd')[0].text.replace("\n", " ")),
     else:
         messages_author = None
 
     if post.find('.content'):
 
         # Verify interactions inter posts
-        if post[0].find(".bbp-reply-content blockquote"):
-            blockquoteList = post[0].find(".bbp-reply-content blockquote")
+        if post.find("blockquote"):
+            blockquoteList = post.find("blockquote")
             id_post_interaction = []
 
             # Processing id interactions of post
-            for blockquot in blockquoteList:
-                if blockquot.find(".d4p-bbt-quote-title a"):
-                    str_aux = str(blockquot.find(
-                        ".d4p-bbt-quote-title a")[0].links)
-                    str_aux = str_aux.split("-")
-                    id_post_aux = str_aux[-1].split("'")
-                    id_post_interaction.append(id_post_aux[0])
+            # for blockquot in blockquoteList:
+            #     if blockquot.find(".d4p-bbt-quote-title a"):
+            #         str_aux = str(blockquot.find(
+            #             ".d4p-bbt-quote-title a")[0].links)
+            #
+            #         str_aux = str_aux.split("-")
+            #         id_post_aux = str_aux[-1].split("'")
+            #         id_post_interaction.append(int(id_post_aux[0]))
 
-            number_blockquotes = post[0].find(
-                '.bbp-reply-content')[0].html.count("</blockquote>")
+            # number_blockquotes = post.find(
+            #     '.bbp-reply-content')[0].html.count("</blockquote>")
+
             bs_text = BeautifulSoup(
-                post[0].find('.bbp-reply-content')[0].html, "html.parser")
+                post.find('.content')[0].html, "html.parser")
 
-            for i in range(number_blockquotes):
-                try:
-                    bs_text.blockquote.decompose()
-                except AttributeError:
-                    pass
+            # for i in range(number_blockquotes):
+            #     try:
+            #         bs_text.blockquote.decompose()
+            #     except AttributeError:
+            #         pass
 
-            content_html = bs_text
-            content_text = bs_text.get_text()
+            content_html = str(bs_text)
+            content_text = str(bs_text.get_text())
         else:
-            content_text = post.find('.content')[0].text.replace("\n", " "),
-            content_html = post.find('.content')[0].html.replace("\n", " "),
+            content_text = str(post.find('.content')
+                                    [0].text.replace("\n", " ")),
+            content_html = str(post.find('.content')
+                                    [0].html.replace("\n", " ")),
+            id_post_interaction = []
     else:
-        content_text = ''
-        content_html = ''
+        return False
 
     if post.find(".author time"):
-        date_post = post.find(".author time")[0].text.replace("\n", " "),
+        date_post = str(post.find(".author time")[
+                        0].text.replace("\n", " ")),
     else:
         date_post = ''
 
@@ -212,12 +222,12 @@ def get_post(post, link, session=None):
         "resume_author": None,
         "joined_author": joined_author,
         "messages_author": messages_author,
-        "text_post": str(content_text),
+        "text_post": str(content_text[0]),
         "html_post": str(content_html),
         "number_post": None,
-        "id_post": None,
-        "id_post_interaction": post.attrs["class"],
-        "date_post": date_post,
+        "id_post": int(post.attrs["id"].replace("p", "")),
+        "id_post_interaction": id_post_interaction,
+        "date_post": handle_date(date_post[0]),
         "links": re.findall(LINKS_REGEX, str(content_html)),
         "thread": link,
     }
@@ -226,46 +236,27 @@ def get_post(post, link, session=None):
 
 
 def handle_date(date_post):
-    date_post = date_post.replace(",", "")
+
     week_day = date_post.split()
     current_date = datetime.today().replace(
         hour=0, minute=0, second=0, microsecond=0)
     real_date = datetime.today()
 
-    if week_day[0] in week_day_list:
+    if "ago" in week_day:
 
-        # handles date: case (1) day of this week / last week
-        if week_day_list[week_day[0]] != -1:
-
-            if week_day_list[week_day[0]] > current_date.today().weekday():
-                number_day = (
-                    7 - week_day_list[week_day[0]]) + current_date.today().weekday()
-            elif week_day_list[week_day[0]] < current_date.today().weekday():
-                number_day = current_date.today().weekday() - \
-                    week_day_list[week_day[0]]
-
+        # handles date: case (1) month ago
+        if "month" in week_day:
+            number_day = int(week_day[0])
+            real_date = current_date - relativedelta(months=number_day)
+        
+        # handles date: case (2) weeks ago
+        elif "week" in week_day:
+            number_day = int(week_day[0])*7
             real_date = current_date - relativedelta(days=number_day)
-
-        # handles date: case (2) yesterday  /today
-        else:
-            if "Yesterday" in week_day[0]:
-                real_date = current_date - relativedelta(days=1)
-
-            elif "Today" in week_day[0]:
-                real_date = current_date - relativedelta(days=0)
-
-        if 'am' in date_post or "12:" in date_post:
-            week_day_hour = week_day[2].split(':')
-            real_date = real_date.replace(
-                hour=int(week_day_hour[0]), minute=int(week_day_hour[1]))
-        else:
-            week_day_hour = week_day[2].split(':')
-            real_date = real_date.replace(
-                hour=int(week_day_hour[0]) + 12, minute=int(week_day_hour[1]))
 
     # handles date: case (3) older post
     else:
-        real_date = real_date.replace(day=int(week_day[1]), month=int(month_list[week_day[0]]),
-                                      year=int(week_day[2]), hour=0, minute=0, second=0, microsecond=0)
+        real_date = real_date.replace(day=1, month=int(month_list[week_day[0]]),
+                                      year=int(week_day[1]), hour=0, minute=0, second=0, microsecond=0)
 
     return real_date
