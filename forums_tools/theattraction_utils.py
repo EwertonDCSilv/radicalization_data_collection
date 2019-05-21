@@ -41,26 +41,46 @@ def build_index(link, dst, nump):
     for page_num in range(1, number_of_pages + 1, 1):
         print("Forum: {0} - Page {1}/{2}".format(subforum,
                                                  page_num, number_of_pages))
+
         r = session.get(INCELS_THREAD_BASE + link+"&page=" + str(page_num))
 
-        print((INCELS_THREAD_BASE + link+"&page=" + str(page_num)))
+        thread = list(r.html.find("#thread_inlinemod_form"))[0]
+        len_list = len(r.html.find("#thread_inlinemod_form .inner"))
 
-        for thread in r.html.find("#thread_inlinemod_form .threadbit "):
+        j = 0  # Count element secundary
+
+        for i in range(len_list):
+
+            if thread.find('.threadstats li')[j]:
+                strAux = str(thread.find('.threadstats li')
+                             [j].text.replace("Replies:", ""))
+                strAux = strAux.replace(",", "")
+                replies = strAux.replace(" ", "")
+            else:
+                replies = 0
+
+            if thread.find('.threadstats li')[j+1]:
+                strAux = str(thread.find('.threadstats li')
+                             [j+1].text).replace("Views:", "")
+                strAux = strAux.replace(",", "")
+                views = strAux.replace(" ", "")
+            else:
+                views = 0
 
             thread_dict = {
                 "type": None,
-                "title": thread.find('.title')[0].text,
-                "link": list(thread.find('.title')[1].links)[0],
-                "author_topic": thread.find('.author')[0].text,
-                "replies": thread.find('.threadstats li')[0].text,
-                "views":  thread.find('.threadstats li')[1].text,
+                "title": str(thread.find('.inner .title')[i].text).replace("\n", ""),
+                "link": str(list(thread.find('.inner .title')[i].links)[0]).replace("\n", ""),
+                "author_topic": str(thread.find('.inner .author .username ')[i].text).replace("\n", ""),
+                "replies": replies,
+                "views": views,
                 "subforum": subforum
             }
 
-            print(thread_dict)
-
             df_list.append(thread_dict)
-    
+
+            j = j + 3  # Each element content 3 subelements
+
     # Export data index
     subforum = subforum.replace("?", "-")
     subforum = subforum.replace("!", "-")
@@ -122,7 +142,7 @@ def get_num_pages_post(link, session=None):
     session = get_html_session(session)
     r_post = session.get(
         "https://www.mgtow.com/forums/topic/back-again-advice-needed/")
-    
+
     # Get number pages for post
     try:
         number_of_pages_post = int(r_post.html.find(
@@ -134,8 +154,9 @@ def get_num_pages_post(link, session=None):
 
 def get_posts_page(link, thread_page, session=None):
     session = get_html_session(session)
-    r_post = session.get(INCELS_THREAD_BASE + link +"page/" + str(thread_page))
-    
+    r_post = session.get(INCELS_THREAD_BASE + link +
+                         "page/" + str(thread_page))
+
     # Get elements post
     return r_post.html.find('.topic')
 

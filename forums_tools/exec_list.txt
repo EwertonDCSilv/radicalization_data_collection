@@ -1,7 +1,7 @@
 EXIT    Tag   Code	Date    Post    FILE	LINK
 [01]    [OK]  [OK]	[OK]    [OK]    [OK]	https://incels.co/
 [01]    [OK]  [OK]	[OK]    [OK]    [OK]	https://www.mgtow.com/forums/
-[00]    [OK]  [NO]	[NO]    [OK]    [OK]	https://redpilltalk.com/
+[01]    [OK]  [OK]	[OK]    [OK]    [OK]	https://redpilltalk.com/
 [00]    [OK]  [NO]	[NO]    [NO]    [OK]	http://www.theattractionforums.com/
 [00]    [OK]  [NO]	[NO]    [NO]    [OK]	https://www.pick-up-artist-forum.com/
 [00]    [NO]  [NO]	[NO]    [NO]    [OK]	https://www.rooshvforum.com/
