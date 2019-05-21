@@ -158,43 +158,108 @@ def get_posts_page(link, thread_page, session=None):
                          "page/" + str(thread_page))
 
     # Get elements post
-    return r_post.html.find('.topic')
+    return r_post.html.find('.postlist')
 
 
 def get_post(post, link, session=None):
+    '''
+        "resume_author": $('.userstats dd'),
+        "messages_author": none,
+        "text_post": $('.postlist .postbit .postcontent'),
+        "html_post": $('.postlist .postbit .postcontent')
+        "number_post": $('.postlist .postbit .nodecontrols'),
+                *"id_post": $(""),
+                *"id_post_interaction": $(""),
+        "date_post": $(".postlist .postdate"),
+        "links": $('.postlist .postbit .postcontent').eq(0),
+        "thread": $('#pagecontent tr td').eq(9),
 
-    has_author = post.find(".bbp-reply-author a") is not None
+    '''
 
+    if post.find(".postbit .username"):
+        autor = str(post.find(".postbit .username")
+                    [0].text.replace("\n", " "))
+    else:
+        autor = None
+
+    if post.find('dl dd'):
+        joined_author = str(
+            post.find('dl dd')[1].text.replace("\n", " ")),
+    else:
+        joined_author = None
+
+    if post.find('dl dd'):
+        messages_author = str(
+            post.find('dl dd')[0].text.replace("\n", " ")),
+    else:
+        messages_author = None
+
+    if post.find('.postbit .postcontent'):
+
+        # Verify interactions inter posts
+        if post.find("blockquote"):
+            blockquoteList = post.find("blockquote")
+            id_post_interaction = []
+
+            # Processing id interactions of post
+            # for blockquot in blockquoteList:
+            #     if blockquot.find(".d4p-bbt-quote-title a"):
+            #         str_aux = str(blockquot.find(
+            #             ".d4p-bbt-quote-title a")[0].links)
+            #
+            #         str_aux = str_aux.split("-")
+            #         id_post_aux = str_aux[-1].split("'")
+            #         id_post_interaction.append(int(id_post_aux[0]))
+
+            # number_blockquotes = post.find(
+            #     '.bbp-reply-content')[0].html.count("</blockquote>")
+
+            bs_text = BeautifulSoup(
+                post.find('.postbit .postcontent')[0].html, "html.parser")
+
+            # for i in range(number_blockquotes):
+            #     try:
+            #         bs_text.blockquote.decompose()
+            #     except AttributeError:
+            #         pass
+
+            content_html = str(bs_text)
+            content_text = str(bs_text.get_text())
+        else:
+            content_text = str(post.find('.content')
+                               [0].text.replace("\n", " ")),
+            content_html = str(post.find('.content')
+                               [0].html.replace("\n", " ")),
+            id_post_interaction = []
+    else:
+        return False
+
+    if post.find(".author time"):
+        date_post = str(post.find(".author time")
+                        [0].text.replace("\n", " ")),
+    else:
+        date_post = ''
+
+    # Data of post
     post_dict = {
-        # "author": post.find('.username', first=True).text,
-        # "resume_author": post.find('.message-userTitle', first=True).text,
-        # "joined_author": post.find('.message-userExtras dd', first=True).text,
-        # "messages_author": int(re.sub(",", "", post.find('.message-userExtras dd')[1].text)),
-        # "text_post": re.sub("[\n|\xa0]+", " ", bs_text.text),
-        # "html_post": post.find('.message-content')[0].html,
-        # "number_post": post.find('.message-attribution-opposite a')[1].text,
-        # "id_post": re.sub("js-post-", "", post.attrs["id"]),
-        # "id_post_interaction": [re.sub(r'/goto/post\?id=', "", list(v.links)[0])
-        #                        for v in post.find(".bbCodeBlock-title")],
-        # "date_post": post.find('.u-concealed')[0].text,
-        # "links": re.findall(LINKS_REGEX, str(bs_text.html)),
-        # "thread": link
 
-
-        "author": post.find(".bbp-reply-author a") if has_author else post.find(".bbp-reply-author"),
+        "author": autor,
         "resume_author": None,
-        "joined_author": None,
-        "messages_author": None,
-        "text_post": post.find(" .bbp-reply-content", first=True).text,
-        "html_post": post.find(" .bbp-reply-content")[0].html,
-        "number_post": None,  # Use a count,
-        # "id_post": post.find(""),
-        # "id_post_interaction": post.find(""),
-        # "date_post": post.find(".bbp-reply-post-date").text,
-        "links": re.findall(LINKS_REGEX, str(post.find(" .bbp-reply-content")[0].html)),
+        "joined_author": joined_author,
+        "messages_author": messages_author,
+        "text_post": str(content_text),
+        "html_post": str(content_html),
+        "number_post": None,
+        "id_post": 0,  # int(post.attrs["id"].replace("post_", "")),
+        "id_post_interaction": id_post_interaction,
+        "date_post": date_post,
+        "links": re.findall(LINKS_REGEX, str(content_html)),
         "thread": link,
     }
+
     print(post_dict)
+    exit()
+
     return post_dict
 
 
