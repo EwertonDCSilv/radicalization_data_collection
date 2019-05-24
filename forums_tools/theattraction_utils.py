@@ -13,16 +13,17 @@ month_list = {"Jan": 1, "Feb": 2, "Mar": 3, "Apr": 4, "May": 5, "Jun": 6, "Jul":
               "Nov": 11, "Dec": 12, }
 
 LINKS_REGEX = r'(http|ftp|https)://([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?'
+SPECIAL_CHARS = r'(\t|\r\n|\n)?'
 
 INCELS_URL = "https://www.theattractionforums.com/"
-INCELS_THREAD_BASE = "https://www.theattractionforums.com/"
+URL_THREAD_BASE = "https://www.theattractionforums.com/"
 
 
 def build_index(link, dst, nump):
     session = get_html_session()
 
     # Gets the first page
-    r = session.get(INCELS_THREAD_BASE + link+"&page")
+    r = session.get(URL_THREAD_BASE + link+"&page")
 
     # Find number of pages
     number_of_pages = 1
@@ -42,7 +43,7 @@ def build_index(link, dst, nump):
         print("Forum: {0} - Page {1}/{2}".format(subforum,
                                                  page_num, number_of_pages))
 
-        r = session.get(INCELS_THREAD_BASE + link+"&page=" + str(page_num))
+        r = session.get(URL_THREAD_BASE + link+"&page=" + str(page_num))
 
         thread = list(r.html.find("#thread_inlinemod_form"))[0]
         len_list = len(r.html.find("#thread_inlinemod_form .inner"))
@@ -126,29 +127,30 @@ def get_thread(link, session=None):
             try:
                 post_dict = get_post(post, link, session)
                 df_list.append(post_dict)
-            except Exception as ex:
+            except Exception:
                 traceback.print_exc()
                 print("problem with post", idx, ":", link)
 
     # Export data posts
-    name_file = link[9:].replace("?", "-")
-    name_file = name_file.replace("!", "-")
-    name_file = name_file.replace(" ", "_")
+    name_file = link[9:].split("t=")
+    name_file = name_file[-1].split("&")
 
     df = pd.DataFrame(df_list)
-    df.to_csv("./data/forums/mgtow/posts/" +
-              name_file + ".csv", index=False)
+    df.to_csv("./data/forums/theattraction/posts/" +
+              name_file[0] + ".csv", index=False)
+
+    exit()
 
 
 def get_num_pages_post(link, session=None):
     session = get_html_session(session)
-    r_post = session.get(
-        "https://www.mgtow.com/forums/topic/back-again-advice-needed/")
+    r_post = session.get(URL_THREAD_BASE+link)
 
     # Get number pages for post
     try:
         number_of_pages_post = int(r_post.html.find(
-            ".bbp-pagination-links a")[-2].text)
+            ".pagination_bottom span")[-3].text)
+
     except IndexError:
         number_of_pages_post = 1
     return number_of_pages_post
@@ -156,8 +158,8 @@ def get_num_pages_post(link, session=None):
 
 def get_posts_page(link, thread_page, session=None):
     session = get_html_session(session)
-    r_post = session.get(INCELS_THREAD_BASE + link +
-                         "page/" + str(thread_page))
+    r_post = session.get(URL_THREAD_BASE + link +
+                         "&page=" + str(thread_page))
 
     # Get elements post
     return r_post.html.find('.postcontainer')
@@ -165,16 +167,15 @@ def get_posts_page(link, thread_page, session=None):
 
 def get_post(post, link, session=None):
 
-    if post.find(".postcontainer .username"):
-        autor = str(post.find(".postcontainer .username")
+    if post.find(".username"):
+        autor = str(post.find(".username")
                     [0].text.replace("\n", " "))
     else:
         autor = None
 
     if post.find('.userstats dd'):
-        joined_author = str(
-            post.find('.userstats dd')[0].text.replace("\n", " ")),
-        joined_author = joined_author[0]
+        joined_author = str(post.find('.userstats dd')[0].text)
+        joined_author = re.sub(SPECIAL_CHARS, '', joined_author)
 
     else:
         joined_author = None
@@ -183,20 +184,18 @@ def get_post(post, link, session=None):
 
     if post.find('.userstats dd'):
         if len(post.find('.userstats dd')) == 4:
-            messages_author = str(
-                post.find('.userstats dd')[3].text.replace("\n", " "))
-            messages_author = messages_author[0]
+            messages_author = str(post.find('.userstats dd')[3].text)
+            messages_author = re.sub(SPECIAL_CHARS, '', messages_author)
 
         elif len(post.find('.userstats dd')) == 3:
-            messages_author = str(
-                post.find('.userstats dd')[2].text.replace("\n", " "))
-            messages_author = messages_author[0]
+            messages_author = str(post.find('.userstats dd')[2].text)
+            messages_author = re.sub(SPECIAL_CHARS, '', messages_author)
 
-    if post.find('.postcontainer .postcontent'):
+    if post.find('.postcontent'):
 
         # Verify interactions inter posts
-        if post.find("blockquote"):
-            blockquoteList = post.find("blockquote")
+        if post.find(".message"):
+            blockquoteList = post.find(".message blockquote")
             id_post_interaction = []
 
             # Processing id interactions of post
@@ -208,34 +207,34 @@ def get_post(post, link, session=None):
                     id_post_aux = str_aux[-1]
                     id_post_interaction.append(int(id_post_aux[0]))
 
-            # print(id_post_interactionc)
-
-            # number_blockquotes = post.find(
-            #     '.bbp-reply-content')[0].html.count("</blockquote>")
+            number_blockquotes = post.find(
+                '.message')[0].html.count("</blockquote>")
 
             bs_text = BeautifulSoup(
-                post.find('.postcontainer .postcontent')[0].html, "html.parser")
+                post.find('.postcontent')[0].html, "html.parser")
 
-            # for i in range(number_blockquotes):
-            #     try:
-            #         bs_text.blockquote.decompose()
-            #     except AttributeError:
-            #         pass
+            for i in range(number_blockquotes):
+                try:
+                    bs_text.blockquote.decompose()
+                except AttributeError:
+                    pass
 
-            content_html = str(bs_text)
-            content_text = str(bs_text.get_text())
+            content_html = re.sub(SPECIAL_CHARS, '', str(bs_text))
+            content_text = re.sub(SPECIAL_CHARS, '', str(bs_text.get_text()))
         else:
-            content_text = str(post.find('.postcontainer .postcontent')
-                               [0].text.replace("\n", " ")),
-            content_html = str(post.find('.postcontainer .postcontent')
-                               [0].html.replace("\n", " ")),
+            content_text = re.sub(SPECIAL_CHARS, '', str(
+                post.find('.postcontent')[0].text))
+
+            content_html = re.sub(SPECIAL_CHARS, '', str(
+                post.find('.postcontent')[0].html))
+
             id_post_interaction = []
     else:
         return False
 
     if post.find(".date"):
-        date_post = str(post.find(".date")
-                        [0].text.replace("\n", " ")),
+        date_post = str(post.find(".date")[0])
+        date_post = re.sub(SPECIAL_CHARS, '', date_post)
     else:
         date_post = ''
 
@@ -245,11 +244,10 @@ def get_post(post, link, session=None):
         number_post = ''
 
     if post.find('.postcounter'):
-        id_post = post.find('.postcontainer')[0].attrs["id"].replace("post_", "")
+        id_post = post.find('.postcontainer')[
+            0].attrs["id"].replace("post_", "")
     else:
         id_post = ''
-    
-    print(id_post)
 
     # Data of post
     post_dict = {
@@ -268,7 +266,7 @@ def get_post(post, link, session=None):
         "thread": link,
     }
 
-    # print(post_dict)
+    print(post_dict)
     # exit()
     return post_dict
 
