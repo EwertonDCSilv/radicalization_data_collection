@@ -130,12 +130,14 @@ def get_thread(link, session=None):
                 traceback.print_exc()
                 print("problem with post", idx, ":", link)
 
-        exit()
-
     # Export data posts
+    name_file = link[9:].replace("?", "-")
+    name_file = name_file.replace("!", "-")
+    name_file = name_file.replace(" ", "_")
+
     df = pd.DataFrame(df_list)
     df.to_csv("./data/forums/mgtow/posts/" +
-              re.sub("/", "", link[9:]) + ".csv", index=False)
+              name_file + ".csv", index=False)
 
 
 def get_num_pages_post(link, session=None):
@@ -158,43 +160,39 @@ def get_posts_page(link, thread_page, session=None):
                          "page/" + str(thread_page))
 
     # Get elements post
-    return r_post.html.find('.postlist')
+    return r_post.html.find('.postcontainer')
 
 
 def get_post(post, link, session=None):
-    '''
-        "resume_author": $('.userstats dd'),
-        "messages_author": none,
-        "text_post": $('.postlist .postbit .postcontent'),
-        "html_post": $('.postlist .postbit .postcontent')
-        "number_post": $('.postlist .postbit .nodecontrols'),
-                *"id_post": $(""),
-                *"id_post_interaction": $(""),
-        "date_post": $(".postlist .postdate"),
-        "links": $('.postlist .postbit .postcontent').eq(0),
-        "thread": $('#pagecontent tr td').eq(9),
 
-    '''
-
-    if post.find(".postbit .username"):
-        autor = str(post.find(".postbit .username")
+    if post.find(".postcontainer .username"):
+        autor = str(post.find(".postcontainer .username")
                     [0].text.replace("\n", " "))
     else:
         autor = None
 
-    if post.find('dl dd'):
+    if post.find('.userstats dd'):
         joined_author = str(
-            post.find('dl dd')[1].text.replace("\n", " ")),
+            post.find('.userstats dd')[0].text.replace("\n", " ")),
+        joined_author = joined_author[0]
+
     else:
         joined_author = None
 
-    if post.find('dl dd'):
-        messages_author = str(
-            post.find('dl dd')[0].text.replace("\n", " ")),
-    else:
-        messages_author = None
+    messages_author = None
 
-    if post.find('.postbit .postcontent'):
+    if post.find('.userstats dd'):
+        if len(post.find('.userstats dd')) == 4:
+            messages_author = str(
+                post.find('.userstats dd')[3].text.replace("\n", " "))
+            messages_author = messages_author[0]
+
+        elif len(post.find('.userstats dd')) == 3:
+            messages_author = str(
+                post.find('.userstats dd')[2].text.replace("\n", " "))
+            messages_author = messages_author[0]
+
+    if post.find('.postcontainer .postcontent'):
 
         # Verify interactions inter posts
         if post.find("blockquote"):
@@ -202,20 +200,21 @@ def get_post(post, link, session=None):
             id_post_interaction = []
 
             # Processing id interactions of post
-            # for blockquot in blockquoteList:
-            #     if blockquot.find(".d4p-bbt-quote-title a"):
-            #         str_aux = str(blockquot.find(
-            #             ".d4p-bbt-quote-title a")[0].links)
-            #
-            #         str_aux = str_aux.split("-")
-            #         id_post_aux = str_aux[-1].split("'")
-            #         id_post_interaction.append(int(id_post_aux[0]))
+            for blockquot in blockquoteList:
+                if blockquot.find(".bbcode_postedby a"):
+                    str_aux = str(blockquot.find(
+                        ".bbcode_postedby a")[0].links)
+                    str_aux = str_aux.split("#post")
+                    id_post_aux = str_aux[-1]
+                    id_post_interaction.append(int(id_post_aux[0]))
+
+            # print(id_post_interactionc)
 
             # number_blockquotes = post.find(
             #     '.bbp-reply-content')[0].html.count("</blockquote>")
 
             bs_text = BeautifulSoup(
-                post.find('.postbit .postcontent')[0].html, "html.parser")
+                post.find('.postcontainer .postcontent')[0].html, "html.parser")
 
             # for i in range(number_blockquotes):
             #     try:
@@ -226,19 +225,31 @@ def get_post(post, link, session=None):
             content_html = str(bs_text)
             content_text = str(bs_text.get_text())
         else:
-            content_text = str(post.find('.content')
+            content_text = str(post.find('.postcontainer .postcontent')
                                [0].text.replace("\n", " ")),
-            content_html = str(post.find('.content')
+            content_html = str(post.find('.postcontainer .postcontent')
                                [0].html.replace("\n", " ")),
             id_post_interaction = []
     else:
         return False
 
-    if post.find(".author time"):
-        date_post = str(post.find(".author time")
+    if post.find(".date"):
+        date_post = str(post.find(".date")
                         [0].text.replace("\n", " ")),
     else:
         date_post = ''
+
+    if post.find('.postcounter'):
+        number_post = post.find('.postcounter')[0].text.replace("#", "")
+    else:
+        number_post = ''
+
+    if post.find('.postcounter'):
+        id_post = post.find('.postcontainer')[0].attrs["id"].replace("post_", "")
+    else:
+        id_post = ''
+    
+    print(id_post)
 
     # Data of post
     post_dict = {
@@ -249,21 +260,22 @@ def get_post(post, link, session=None):
         "messages_author": messages_author,
         "text_post": str(content_text),
         "html_post": str(content_html),
-        "number_post": None,
-        "id_post": 0,  # int(post.attrs["id"].replace("post_", "")),
+        "number_post": int(number_post),
+        "id_post": id_post,
         "id_post_interaction": id_post_interaction,
-        "date_post": date_post,
+        "date_post": handle_date(date_post[0]),
         "links": re.findall(LINKS_REGEX, str(content_html)),
         "thread": link,
     }
 
-    print(post_dict)
-    exit()
-
+    # print(post_dict)
+    # exit()
     return post_dict
 
 
 def handle_date(date_post):
+
+    return date_post
     date_post = date_post.replace(",", "")
     week_day = date_post.split()
     current_date = datetime.today().replace(
